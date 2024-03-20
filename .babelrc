@@ -1,0 +1,35 @@
+{
+  "plugins": [
+    [
+      "babel-plugin-root-import",
+      {
+        "paths": [
+          {
+            "rootPathSuffix": "./dist/common/log.js",
+            "rootPathPrefix": "@log"
+          },
+          {
+            "rootPathSuffix": "./dist/utils/functions/index.js",
+            "rootPathPrefix": "@utils"
+          },
+          {
+            "rootPathSuffix": "./dist/app",
+            "rootPathPrefix": "@app"
+          },
+          {
+            "rootPathSuffix": "./dist/classes",
+            "rootPathPrefix": "@classes"
+          },
+          {
+            "rootPathSuffix": "./dist/common",
+            "rootPathPrefix": "@common"
+          },
+          {
+            "rootPathSuffix": "./dist/utils/scripts",
+            "rootPathPrefix": "@scripts"
+          }
+        ]
+      }
+    ]
+  ]
+}
