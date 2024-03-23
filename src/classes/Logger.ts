@@ -10,7 +10,7 @@ export interface LogTagEdges {
 
 export const ValidLogTagNames = {
   client: 'Client',
-  events: 'Eveniments',
+  events: 'Events',
   setup: 'Setup',
   error: 'Error',
   commands: 'Commands'
