@@ -10,9 +10,10 @@ export interface LogTagEdges {
 
 export const ValidLogTagNames = {
   client: 'Client',
-  events: 'Events',
+  events: 'Eveniments',
   setup: 'Setup',
-  error: 'Error'
+  error: 'Error',
+  commands: 'Commands'
 };
 
 function generatePaddedValues(strings: { [K in keyof typeof ValidLogTagNames]: string }): { [K in keyof typeof ValidLogTagNames]: number } {
@@ -35,6 +36,7 @@ export const ValidLogTagNamePadding = generatePaddedValues(ValidLogTagNames);
 
 export interface LogTagName {
   readonly name: keyof typeof ValidLogTagNames;
+  readonly spaceChar: string;
   readonly hexColor: string;
 }
 
@@ -44,20 +46,26 @@ export interface LogTagName {
 export class LogTag {
   /**
    * Create a new LogTag object, stringify to use.
-   * @param tagName The tag name + it's color.
+   * @param tagName The tag name, it's color and a space char.
    * @param tagEdges The tag edge characters + their color.
    */
   constructor(public readonly tagName: LogTagName, public readonly tagEdges: LogTagEdges) {}
 
-  toString(padding?: number) {
+  toString(padding = 0) {
     const nameCol = chalk.hex(this.tagName.hexColor);
     const edgeCol = chalk.hex(this.tagEdges.hexColor);
 
-    const name = nameCol(`${ValidLogTagNames[this.tagName.name]}${padding ? ' '.repeat(padding) : ''}`);
+    const padLeftAmount = Math.floor(padding / 2);
+    const padRightAmount = Math.floor(padding / 2) + (padding % 2);
+
+    const paddingLeft = padLeftAmount === 0 ? '' : this.tagName.spaceChar.repeat(padLeftAmount - 1) + ' ';
+    const paddingRight = padRightAmount === 0 ? '' : ' ' + this.tagName.spaceChar.repeat(padRightAmount - 1);
+
+    const name = nameCol(`${edgeCol(paddingLeft)}${ValidLogTagNames[this.tagName.name]}${edgeCol(paddingRight)}`);
     const start = edgeCol(this.tagEdges.chars.start);
     const end = edgeCol(this.tagEdges.chars.end);
 
-    return `${start} ${name} ${end}`;
+    return `${start}${name}${end}`;
   }
 }
 
@@ -117,7 +125,11 @@ export class Log {
       console.warn(`Logger: Tag \`${tag}\` was not found!`);
     }
 
-    console.log(`${coloredTag?.tag}${this.spaceAfterTag ? ' ' : ''}${`${this.layerTab}${this.spaceBetweenLayers ? ' ' : ''}`.repeat(layer).trim()}${this.spaceBeforeMessage ? ' ' : ''}${message}`);
+    console.log(
+      `${coloredTag?.tag}${this.spaceAfterTag ? ' ' : ''}${(layer > 0 ? ' ' : '') + `${this.layerTab}${this.spaceBetweenLayers ? ' ' : ''}`.repeat(layer).trim()}${
+        this.spaceBeforeMessage ? ' ' : ''
+      }${message}`
+    );
   }
 
   /**

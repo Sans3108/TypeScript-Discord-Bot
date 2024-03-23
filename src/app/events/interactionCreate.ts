@@ -3,26 +3,29 @@ import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { handleErr } from '@log';
 
 export default new DiscordEvent('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) {
-    if (!interaction.isMessageContextMenuCommand()) return;
-  }
+  const isCommand = interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand();
+
+  if (!isCommand) return;
 
   const client = interaction.client as CustomClient;
 
   const command = client.commands.get(interaction.commandName)!;
 
   try {
-    //@ts-ignore
+    //@ts-expect-error
     await command.run(interaction);
-  } catch (_err: any) {
-    const err: Error = _err;
+  } catch (_err: unknown) {
+    const err = _err as Error;
 
     handleErr(err);
 
     const reply = { content: 'There was an error while executing this command!', ephemeral: true };
 
-    if (interaction.replied || interaction.deferred) return await interaction.editReply(reply).catch(handleErr);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply(reply).catch(handleErr);
+      return;
+    }
 
-    return interaction.reply(reply).catch(handleErr);
+    await interaction.reply(reply).catch(handleErr);
   }
 });

@@ -1,12 +1,13 @@
 import { Log, LogLayerTab, LogTag, ValidLogTagNames } from '@classes/Logger.js';
-import { tagColor, tagEndEdge, tagStartEdge } from '@common/constants.js';
+import { spacerChar, tagColor, tagEndEdge, tagStartEdge } from '@common/constants.js';
 
 const logger = new Log(
   [
     new LogTag(
       {
         name: 'error',
-        hexColor: '#f54b38'
+        hexColor: '#f54b38',
+        spaceChar: spacerChar
       },
       {
         chars: {
@@ -19,7 +20,8 @@ const logger = new Log(
     new LogTag(
       {
         name: 'setup',
-        hexColor: '#38f581'
+        hexColor: '#38f581',
+        spaceChar: spacerChar
       },
       {
         chars: {
@@ -32,7 +34,8 @@ const logger = new Log(
     new LogTag(
       {
         name: 'client',
-        hexColor: '#9738f5'
+        hexColor: '#9738f5',
+        spaceChar: spacerChar
       },
       {
         chars: {
@@ -45,7 +48,22 @@ const logger = new Log(
     new LogTag(
       {
         name: 'events',
-        hexColor: '#384ef5'
+        hexColor: '#384ef5',
+        spaceChar: spacerChar
+      },
+      {
+        chars: {
+          start: tagStartEdge,
+          end: tagEndEdge
+        },
+        hexColor: tagColor
+      }
+    ),
+    new LogTag(
+      {
+        name: 'commands',
+        hexColor: '#fc039d',
+        spaceChar: spacerChar
       },
       {
         chars: {
@@ -56,7 +74,7 @@ const logger = new Log(
       }
     )
   ],
-  new LogLayerTab('─', 3, tagColor),
+  new LogLayerTab(spacerChar, 3, tagColor),
   false,
   false,
   true

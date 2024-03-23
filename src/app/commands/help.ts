@@ -1,4 +1,4 @@
-import { Command, CommandGroup } from '@classes/client/Command.js';
+import { ChatInputCommand, Command, CommandGroup, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
 import { botInvite, colors, supportServer } from '@common/constants.js';
 import { capitalize, formatTime } from '@utils';
 import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
@@ -12,19 +12,19 @@ const __dirname = path.dirname(__filename);
 
 const commandFiles = fs.readdirSync(path.join(__dirname)).filter(file => file.endsWith('.js'));
 
-const commands: Collection<string, Command> = new Collection();
+const commands: Collection<string, ChatInputCommand | MessageContextCommand | UserContextCommand> = new Collection();
 
 for (const commandFile of commandFiles) {
   if (commandFile === path.basename(__filename)) continue;
 
-  const command: Command = (await import(`./${commandFile}`)).default;
+  const command: ChatInputCommand | MessageContextCommand | UserContextCommand = (await import(`./${commandFile}`)).default;
 
-  if (command.group === CommandGroup.dev) continue;
+  if (command.developer) continue;
 
   commands.set(command.name, command);
 }
 
-export default new Command({
+export default new Command.ChatInput({
   builder: new SlashCommandBuilder().addStringOption(option => {
     const options = commands.map(command => ({ name: command.name, value: command.name }));
 
@@ -37,7 +37,7 @@ export default new Command({
 
     return option;
   }),
-  config: {
+  metadata: {
     name: 'help',
     description: 'Get a list of commands or help with a specific command.',
     cooldown: 5,
@@ -46,7 +46,7 @@ export default new Command({
   },
   execute: async function (interaction, client) {
     // TODO: Add more info (such as usage) to commands
-    const helpCommand = client.commands.get('help') as Command;
+    const helpCommand = client.commands.get('help') as ChatInputCommand;
 
     commands.set(helpCommand.name, helpCommand);
 
@@ -55,8 +55,12 @@ export default new Command({
     if (commandOption) {
       const command = commands.get(commandOption)!;
 
+      const commandGroup = Object.keys(CommandGroup)
+        .find(key => CommandGroup[key as keyof typeof CommandGroup] === command.group)!
+        .toLowerCase();
+
       const fields: APIEmbedField[] = [
-        { name: '**Group**', value: `\`${capitalize(command.group.toLowerCase())}\``, inline: true },
+        { name: '**Group**', value: `\`${capitalize(commandGroup)}\``, inline: true },
         { name: '**Cooldown**', value: `\`${formatTime(command.cooldown)}\``, inline: true }
       ];
 
@@ -72,13 +76,12 @@ export default new Command({
       return true;
     }
 
-    const commandGroups: APIEmbedField[] = Object.values(CommandGroup)
-      .filter(value => value !== CommandGroup.dev)
-      .filter(value => commands.filter(c => c.group === value).size > 0)
+    const commandGroups: APIEmbedField[] = Object.keys(CommandGroup)
+      .filter(value => commands.filter(c => c.group === CommandGroup[value as keyof typeof CommandGroup]).size > 0)
       .map(value => ({
         name: `**${capitalize(value.toLowerCase())} commands:**`,
         value: commands
-          .filter(c => c.group === value)
+          .filter(c => c.group === CommandGroup[value as keyof typeof CommandGroup])
           .map(c => `${c} - ${c.description}`)
           .join('\n')
       }));

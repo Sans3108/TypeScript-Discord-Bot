@@ -1,19 +1,20 @@
 import { Command, CommandGroup } from '@classes/client/Command.js';
 import { developerIds } from '@common/constants.js';
 import { emb, pastecord } from '@utils';
-import { ApplicationCommandType, ContextMenuCommandBuilder, codeBlock } from 'discord.js';
+import { ContextMenuCommandBuilder, codeBlock } from 'discord.js';
 import { inspect } from 'util';
 
 // Edit at your own risk
 
-export default new Command({
-  builder: new ContextMenuCommandBuilder().setType(ApplicationCommandType.Message),
-  config: {
+export default new Command.MessageContext({
+  builder: new ContextMenuCommandBuilder(),
+  metadata: {
     name: 'Eval',
     description: 'Developer command. Evaluates JS code and outputs the result.',
     cooldown: 24 * 60 * 60,
-    group: CommandGroup.dev,
-    guildOnly: false
+    group: CommandGroup.general,
+    guildOnly: false,
+    developer: true
   },
   execute: async function (interaction, client) {
     if (!developerIds.includes(interaction.user.id)) {

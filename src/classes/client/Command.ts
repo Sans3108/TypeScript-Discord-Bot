@@ -1,140 +1,315 @@
 import { CustomClient } from '@classes/client/CustomClient.js';
-import { supportServer } from '@common/constants.js';
-import { emb, formatTime } from '@utils';
-import { ChatInputCommandInteraction, ContextMenuCommandBuilder, ContextMenuCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { developerIds, supportServer } from '@common/constants.js';
+import { c, handleErr, log } from '@log';
+import { emb } from '@utils';
+import {
+  ApplicationCommandType,
+  ChatInputCommandInteraction,
+  ContextMenuCommandBuilder,
+  MessageContextMenuCommandInteraction,
+  SlashCommandBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
+  TimestampStyles,
+  UserContextMenuCommandInteraction,
+  time
+} from 'discord.js';
 
-export const CommandType = {
-  slash: 'SLASH',
-  context: 'CONTEXT'
-} as const;
+export enum CommandGroup {
+  general
+}
 
-export const CommandGroup = {
-  general: 'GENERAL',
-  music: 'MUSIC',
-  context: 'CONTEXT',
-  dev: 'DEV'
-} as const;
+export enum CommandType {
+  chatInput,
+  messageContext,
+  userContext
+}
 
-export const CooldownStatus = {
-  apply: 'APPLY',
-  dontApply: 'DONT_APPLY',
-  errored: 'ERRORED'
-} as const;
+export interface CommandOptionsMetadata {
+  name: string;
+  description?: string;
+  helpText?: string;
+  cooldown?: number;
+  group?: CommandGroup;
+  guildOnly?: boolean;
+  developer?: boolean;
+}
+
+export enum CooldownType {
+  normal,
+  skipped,
+  errored
+}
 
 export interface Cooldown {
-  time: number;
-  type: (typeof CooldownStatus)[keyof typeof CooldownStatus];
+  timestamp: number;
+  type: CooldownType;
 }
 
-export interface CommandConfig {
-  cooldown: number;
-  group: (typeof CommandGroup)[keyof typeof CommandGroup];
-  helpText?: string;
-  name: string;
-  description: string;
-  guildOnly: boolean;
+export enum CommandRunResult {
+  normal,
+  errored,
+  onCooldown
 }
 
-export type CommandExecute<T extends (typeof CommandType)[keyof typeof CommandType]> = (
-  interaction: T extends (typeof CommandType)['slash'] ? ChatInputCommandInteraction : ContextMenuCommandInteraction,
-  client: CustomClient
-) => Promise<boolean>;
-
-export interface CommandOptions<T extends (typeof CommandType)[keyof typeof CommandType]> {
-  builder: T extends (typeof CommandType)['slash'] ? SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> : ContextMenuCommandBuilder;
-  config: CommandConfig;
-  execute: CommandExecute<T>;
+//#region Base Command
+export interface BaseCommandOptions {
+  metadata: CommandOptionsMetadata;
 }
 
-export class Command {
-  name: string;
-  description: string;
-  id: string;
-  helpText?: string;
-  cooldown: number;
-  group: (typeof CommandGroup)[keyof typeof CommandGroup];
-  builder: SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> | ContextMenuCommandBuilder;
-  type: (typeof CommandType)[keyof typeof CommandType];
-  guildOnly: boolean;
-  execute: CommandExecute<(typeof CommandType)['slash']> | CommandExecute<(typeof CommandType)['context']>;
+export abstract class BaseCommand {
+  public readonly name: string;
+  public readonly description: string;
+  public readonly helpText?: string;
+  public readonly cooldown: number;
+  public readonly group: CommandGroup;
+  public readonly guildOnly: boolean;
+  public readonly developer: boolean;
+  public id: string;
 
-  constructor(options: CommandOptions<(typeof CommandType)['slash']>);
-  constructor(options: CommandOptions<(typeof CommandType)['context']>);
-  constructor(options: CommandOptions<(typeof CommandType)['slash']> | CommandOptions<(typeof CommandType)['context']>) {
-    this.builder = options.builder;
-
-    this.name = options.config.name;
-    this.builder.setName(options.config.name);
-
-    this.description = options.config.description;
-    if (this.builder instanceof SlashCommandBuilder) {
-      this.builder = this.builder.setDescription(options.config.description);
-      this.type = CommandType.slash;
-    } else this.type = CommandType.context;
-
-    if (options.config.guildOnly) {
-      this.builder = this.builder.setDMPermission(false);
-    } else this.builder = this.builder.setDMPermission(true);
+  constructor(options: BaseCommandOptions) {
+    this.name = options.metadata.name;
+    this.description = options.metadata.description || 'No description.';
+    this.helpText = options.metadata.helpText;
+    this.cooldown = options.metadata.cooldown || 3; // 3s default cooldown
+    this.group = options.metadata.group || CommandGroup.general;
+    this.guildOnly = options.metadata.guildOnly || true;
+    this.developer = options.metadata.developer || false;
 
     this.id = '0';
-    this.guildOnly = options.config.guildOnly;
-    this.helpText = options.config.helpText;
-    this.cooldown = options.config.cooldown;
-    this.group = options.config.group;
-    this.execute = options.execute;
   }
 
-  async run(interaction: ChatInputCommandInteraction): Promise<any>;
-  async run(interaction: ContextMenuCommandInteraction): Promise<any>;
-  async run(interaction: ChatInputCommandInteraction | ContextMenuCommandInteraction): Promise<any> {
+  protected async handleCooldown<T extends ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction>(
+    interaction: T,
+    execute: (interaction: T, client: CustomClient) => Promise<boolean>
+  ): Promise<CommandRunResult> {
     const client = interaction.client as CustomClient;
-    const commandCooldownTimestamps = client.cooldowns.get(this.name)!;
+
+    const cooldownMap = client.commandCooldownMaps.get(this.name);
+
+    if (!cooldownMap) throw new Error(`Could not find cooldown map for ${this.name}`);
 
     const now = Date.now();
 
-    if (commandCooldownTimestamps.has(interaction.user.id)) {
-      const userCooldown = commandCooldownTimestamps.get(interaction.user.id)!;
-      const expirationTime = userCooldown.time + (userCooldown.type === CooldownStatus.apply ? this.cooldown : client.options.commandErrorCooldown) * 1000;
+    if (cooldownMap.has(interaction.user.id)) {
+      const cooldown = cooldownMap.get(interaction.user.id)!;
+      const expireTimestamp = cooldown.timestamp + (cooldown.type === CooldownType.normal ? this.cooldown : client.options.commandErrorCooldown) * 1000;
 
-      if (now < expirationTime) {
-        const timeLeft = (expirationTime - now) / 1000;
+      if (now < expireTimestamp) {
+        const timeLeft = time(new Date(expireTimestamp), TimestampStyles.RelativeTime);
+        const cooldownNormalMessage = `You will be able to use the ${this} command ${timeLeft}.`;
+        const cooldownErrorMessage = `Sorry, the ${this} command previously errored out. Please try again ${timeLeft}.\nIf this keeps happening, please contact support [here](${supportServer}).`;
+        const message = cooldown.type === CooldownType.errored ? cooldownErrorMessage : cooldownNormalMessage;
 
-        return await interaction.reply({
-          embeds: [
-            emb(
-              'error',
-              userCooldown.type === CooldownStatus.errored
-                ? `Sorry, the ${this} command previously errored out. Please try again in \`${formatTime(timeLeft)}\`.\n\nIf it happens again, contact support [here](${supportServer}).`
-                : `Please wait \`${formatTime(timeLeft)}\` before reusing the ${this} command.`
-            )
-          ],
+        await interaction.reply({
+          embeds: [emb('error', message)],
           ephemeral: true
         });
+
+        return CommandRunResult.onCooldown;
       }
     }
 
-    let applyCooldown: (typeof CooldownStatus)[keyof typeof CooldownStatus] = CooldownStatus.errored;
+    let commandResultCooldownType: CooldownType = CooldownType.errored;
 
     try {
-      //@ts-ignore
-      const output = await this.execute(interaction, client);
+      const output = await execute(interaction, client);
 
-      applyCooldown = output ? CooldownStatus.apply : CooldownStatus.dontApply;
-    } catch (error) {
-      console.error(error);
+      commandResultCooldownType = output ? CooldownType.normal : CooldownType.skipped;
+    } catch (_err: unknown) {
+      const err = _err as Error;
+
+      handleErr(err);
+
       const reply = { content: 'There was an error while executing this command!', ephemeral: true };
-      if (interaction.replied || interaction.deferred) return interaction.editReply(reply).catch(console.error);
-      interaction.reply(reply).catch(console.error);
+
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(reply).catch(handleErr);
+      } else await interaction.reply(reply).catch(handleErr);
+
+      return CommandRunResult.errored;
     } finally {
-      if (applyCooldown !== CooldownStatus.dontApply && this.group !== CommandGroup.dev) {
-        // dont apply cooldown to dev commands
-        commandCooldownTimestamps.set(interaction.user.id, { time: Date.now(), type: applyCooldown });
-        setTimeout(() => commandCooldownTimestamps.delete(interaction.user.id), (applyCooldown === CooldownStatus.apply ? this.cooldown : client.options.commandErrorCooldown) * 1000);
+      // dont apply cooldown to dev commands or commands that returned `false`
+      if (commandResultCooldownType !== CooldownType.skipped && !this.developer) {
+        cooldownMap.set(interaction.user.id, { timestamp: Date.now(), type: CooldownType.normal });
+        setTimeout(() => cooldownMap.delete(interaction.user.id), (commandResultCooldownType === CooldownType.normal ? this.cooldown : client.options.commandErrorCooldown) * 1000);
       }
+
+      return CommandRunResult.normal;
     }
   }
 
   toString() {
-    return this.type === CommandType.slash ? `</${this.name}:${this.id}>` : `\`* ${this.name}\``;
+    return this.name;
   }
+}
+//#endregion
+
+//#region ChatInput Command
+export type SlashCommandBuilderTypes = SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> | SlashCommandSubcommandsOnlyBuilder;
+
+export interface ChatInputCommandOptions extends BaseCommandOptions {
+  builder: SlashCommandBuilderTypes;
+  execute: (interaction: ChatInputCommandInteraction, client: CustomClient) => Promise<boolean>;
+}
+
+export class ChatInputCommand extends BaseCommand {
+  public readonly builder: SlashCommandBuilderTypes;
+  protected readonly execute: (interaction: ChatInputCommandInteraction, client: CustomClient) => Promise<boolean>;
+
+  public readonly type: CommandType = CommandType.chatInput;
+
+  constructor(options: ChatInputCommandOptions) {
+    super(options);
+    this.builder = options.builder;
+    this.execute = options.execute;
+
+    this.builder.setName(this.name);
+    this.builder.setDescription(this.description);
+    this.builder.setDMPermission(!this.guildOnly);
+  }
+
+  public async run(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (this.developer && !developerIds.includes(interaction.user.id)) {
+      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+
+      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      return;
+    }
+
+    const result = await this.handleCooldown(interaction, this.execute);
+
+    const client = interaction.client as CustomClient;
+
+    if (client.options.logCommandUses) {
+      const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
+      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
+
+      log(
+        'commands',
+        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
+          this.name,
+          '#38c3f5'
+        )} with result: ${res}`
+      );
+    }
+  }
+
+  toString() {
+    return `</${this.name}:${this.id}>`;
+  }
+}
+//#endregion
+
+//#region MessageContext Command
+export interface MessageContextCommandOptions extends BaseCommandOptions {
+  builder: ContextMenuCommandBuilder;
+  execute: (interaction: MessageContextMenuCommandInteraction, client: CustomClient) => Promise<boolean>;
+}
+
+export class MessageContextCommand extends BaseCommand {
+  public readonly builder: ContextMenuCommandBuilder;
+  protected readonly execute: (interaction: MessageContextMenuCommandInteraction, client: CustomClient) => Promise<boolean>;
+
+  public readonly type: CommandType = CommandType.messageContext;
+
+  constructor(options: MessageContextCommandOptions) {
+    super(options);
+    this.builder = options.builder;
+    this.execute = options.execute;
+
+    this.builder.setName(this.name);
+    this.builder.setDMPermission(!this.guildOnly);
+    this.builder.setType(ApplicationCommandType.Message);
+  }
+
+  public async run(interaction: MessageContextMenuCommandInteraction): Promise<void> {
+    if (this.developer && !developerIds.includes(interaction.user.id)) {
+      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+
+      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      return;
+    }
+
+    const result = await this.handleCooldown(interaction, this.execute);
+
+    const client = interaction.client as CustomClient;
+
+    if (client.options.logCommandUses) {
+      const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
+      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
+
+      log(
+        'commands',
+        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
+          this.name,
+          '#38c3f5'
+        )} with result: ${res}`
+      );
+    }
+  }
+
+  toString() {
+    return `\`* ${this.name}\``;
+  }
+}
+//#endregion
+
+//#region UserContext Command
+export interface UserContextCommandOptions extends BaseCommandOptions {
+  builder: ContextMenuCommandBuilder;
+  execute: (interaction: UserContextMenuCommandInteraction, client: CustomClient) => Promise<boolean>;
+}
+
+export class UserContextCommand extends BaseCommand {
+  public readonly builder: ContextMenuCommandBuilder;
+  protected readonly execute: (interaction: UserContextMenuCommandInteraction, client: CustomClient) => Promise<boolean>;
+
+  public readonly type: CommandType = CommandType.messageContext;
+
+  constructor(options: UserContextCommandOptions) {
+    super(options);
+    this.builder = options.builder;
+    this.execute = options.execute;
+
+    this.builder.setName(this.name);
+    this.builder.setDMPermission(!this.guildOnly);
+    this.builder.setType(ApplicationCommandType.User);
+  }
+
+  public async run(interaction: UserContextMenuCommandInteraction): Promise<void> {
+    if (this.developer && !developerIds.includes(interaction.user.id)) {
+      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+
+      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      return;
+    }
+
+    const result = await this.handleCooldown(interaction, this.execute);
+
+    const client = interaction.client as CustomClient;
+
+    if (client.options.logCommandUses) {
+      const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
+      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
+
+      log(
+        'commands',
+        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
+          this.name,
+          '#38c3f5'
+        )} with result: ${res}`
+      );
+    }
+  }
+
+  toString() {
+    return `\`* ${this.name}\``;
+  }
+}
+//#endregion
+
+export abstract class Command {
+  public static ChatInput = ChatInputCommand;
+  public static MessageContext = MessageContextCommand;
+  public static UserContext = UserContextCommand;
 }

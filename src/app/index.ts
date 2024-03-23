@@ -41,7 +41,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { Command, CommandType } from '@classes/client/Command.js';
+import { ChatInputCommand, CommandType, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { deployCommands } from '@scripts/deployCommands.js';
@@ -54,8 +54,9 @@ const __dirname = path.dirname(__filename);
 log('setup', 'Setting up Discord client');
 
 const client = new CustomClient({
-  intents: [Intents.Guilds, Intents.GuildVoiceStates, Intents.GuildMessages, Intents.MessageContent, Intents.GuildMembers, Intents.GuildVoiceStates],
-  commandErrorCooldown: 60
+  intents: [Intents.Guilds, Intents.GuildMessages, Intents.MessageContent, Intents.GuildMembers], // Not sure about this
+  commandErrorCooldown: 60,
+  logCommandUses: true
 });
 
 // Commands
@@ -64,10 +65,10 @@ log('client', `Setting up commands`, 1);
 const commandFiles = fs.readdirSync(path.join(__dirname, './commands')).filter(file => file.endsWith('.js'));
 
 for (const commandFile of commandFiles) {
-  const command: Command = (await import(`./commands/${commandFile}`)).default;
+  const command: ChatInputCommand | MessageContextCommand | UserContextCommand = (await import(`./commands/${commandFile}`)).default;
   client.addCommand(command);
 
-  log('client', `Imported ${c(`${command.type === CommandType.slash ? '/' : '*'}`, '#4538f5')} ${c(command.name, '#38c3f5')}`, 2);
+  log('client', `Imported ${c(`${command.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(command.name, '#38c3f5')}`, 2);
 }
 
 // Sending commands to discord

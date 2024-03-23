@@ -7,8 +7,8 @@
     "node": "^20.10.0"
   },
   "scripts": {
-    "build": "pnpm run cleanup && tsc && babel dist --out-dir dist",
-    "start": "node --enable-source-maps .",
+    "build": "pnpm cleanup && tsc && babel dist --out-dir dist",
+    "start": "pnpm build && node --enable-source-maps .",
     "cleanup": "rmdir /s /q dist"
   },
   "keywords": [],
