@@ -20,7 +20,7 @@
     "chalk": "^5.3.0",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "undici": "^6.9.0"
   },
   "devDependencies": {
