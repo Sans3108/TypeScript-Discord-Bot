@@ -30,7 +30,7 @@ const { DISCORD_CLIENT_TOKEN, DEV_MODE } = process.env;
 
 const dev = DEV_MODE === 'true';
 
-import { colors } from '@common/constants';
+import { colors } from '@common/constants.js';
 
 log('setup', `Developer mode is ${c(dev ? 'ON' : 'OFF', colors.developerMode[dev ? 'on' : 'off'])}`);
 //#endregion

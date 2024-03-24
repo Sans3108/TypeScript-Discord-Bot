@@ -1,6 +1,6 @@
 import { CommandType } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
-import { colors } from '@common/constants';
+import { colors } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
 import { idFromToken } from '@utils';
 import { APIApplicationCommand, REST, Routes } from 'discord.js';

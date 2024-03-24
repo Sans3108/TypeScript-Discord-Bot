@@ -1,5 +1,5 @@
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
-import { colors } from '@common/constants';
+import { colors } from '@common/constants.js';
 import { c, log } from '@log';
 
 export default new DiscordEvent('ready', async client => {

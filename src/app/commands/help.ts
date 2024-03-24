@@ -65,7 +65,7 @@ export default new Command.ChatInput({
       ];
 
       const commandHelp = new EmbedBuilder()
-        .setColor(colors.info)
+        .setColor(colors.embedColors.info)
         .setTitle(`${command}`)
         .setDescription(command.description + (command.helpText ? `\n\n${command.helpText}` : ''))
         .addFields(...fields)
@@ -92,7 +92,7 @@ export default new Command.ChatInput({
     });
 
     const commandsEmbed = new EmbedBuilder()
-      .setColor(colors.info)
+      .setColor(colors.embedColors.info)
       .setTitle(`${client.user.displayName} - Help`)
       .setThumbnail(client.user.displayAvatarURL())
       .setDescription(`My awesome discord bot template.\n\nMade by \`Sans#0001\` <@366536353418182657>`)
