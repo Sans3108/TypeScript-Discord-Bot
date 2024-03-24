@@ -16,7 +16,9 @@ export const ValidLogTagNames = {
   commands: 'Commands'
 };
 
-function generatePaddedValues(strings: { [K in keyof typeof ValidLogTagNames]: string }): { [K in keyof typeof ValidLogTagNames]: number } {
+function generatePaddedValues(strings: { [K in keyof typeof ValidLogTagNames]: string }): {
+  [K in keyof typeof ValidLogTagNames]: number;
+} {
   const maxLength = Math.max(...Object.values(strings).map(str => str.length));
 
   // @ts-expect-error
@@ -49,7 +51,10 @@ export class LogTag {
    * @param tagName The tag name, it's color and a space char.
    * @param tagEdges The tag edge characters + their color.
    */
-  constructor(public readonly tagName: LogTagName, public readonly tagEdges: LogTagEdges) {}
+  constructor(
+    public readonly tagName: LogTagName,
+    public readonly tagEdges: LogTagEdges
+  ) {}
 
   toString(padding = 0) {
     const nameCol = chalk.hex(this.tagName.hexColor);
@@ -79,7 +84,11 @@ export class LogLayerTab {
    * @param color The hex color of the tab.
    * @param size The size of the tab.
    */
-  constructor(public readonly char: string, public readonly size: number, public readonly color: string) {}
+  constructor(
+    public readonly char: string,
+    public readonly size: number,
+    public readonly color: string
+  ) {}
 
   toString() {
     return chalk.hex(this.color)(this.char.repeat(this.size));
@@ -104,7 +113,10 @@ export class Log {
    * @param layerTabChar The character used to build tabs
    */
   constructor(tags: ReadonlyArray<LogTag>, layerTab: LogLayerTab, spaceAfterTag = true, spaceBetweenLayers = true, spaceBeforeMessage = true) {
-    this.tags = tags.map(t => ({ id: t.tagName.name, tag: t.toString(ValidLogTagNamePadding[t.tagName.name]) }));
+    this.tags = tags.map(t => ({
+      id: t.tagName.name,
+      tag: t.toString(ValidLogTagNamePadding[t.tagName.name])
+    }));
     this.spaceAfterTag = spaceAfterTag;
     this.layerTab = layerTab;
     this.spaceBeforeMessage = spaceBeforeMessage;
@@ -125,11 +137,7 @@ export class Log {
       console.warn(`Logger: Tag \`${tag}\` was not found!`);
     }
 
-    console.log(
-      `${coloredTag?.tag}${this.spaceAfterTag ? ' ' : ''}${(layer > 0 ? ' ' : '') + `${this.layerTab}${this.spaceBetweenLayers ? ' ' : ''}`.repeat(layer).trim()}${
-        this.spaceBeforeMessage ? ' ' : ''
-      }${message}`
-    );
+    console.log(`${coloredTag?.tag}${this.spaceAfterTag ? ' ' : ''}${(layer > 0 ? ' ' : '') + `${this.layerTab}${this.spaceBetweenLayers ? ' ' : ''}`.repeat(layer).trim()}${this.spaceBeforeMessage ? ' ' : ''}${message}`);
   }
 
   /**

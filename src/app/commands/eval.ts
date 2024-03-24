@@ -18,7 +18,10 @@ export default new Command.MessageContext({
   },
   execute: async function (interaction, client) {
     if (!developerIds.includes(interaction.user.id)) {
-      await interaction.reply({ embeds: [emb('error', `You're not allowed to use this command.`)], ephemeral: true });
+      await interaction.reply({
+        embeds: [emb('error', `You're not allowed to use this command.`)],
+        ephemeral: true
+      });
       return true;
     }
 

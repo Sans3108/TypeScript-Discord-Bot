@@ -1,12 +1,12 @@
 import { Log, LogLayerTab, LogTag, ValidLogTagNames } from '@classes/Logger.js';
-import { spacerChar, tagColor, tagEndEdge, tagStartEdge } from '@common/constants.js';
+import { colors, spacerChar, tagEndEdge, tagStartEdge } from '@common/constants.js';
 
 const logger = new Log(
   [
     new LogTag(
       {
         name: 'error',
-        hexColor: '#f54b38',
+        hexColor: colors.logger.tags.error,
         spaceChar: spacerChar
       },
       {
@@ -14,13 +14,13 @@ const logger = new Log(
           start: tagStartEdge,
           end: tagEndEdge
         },
-        hexColor: tagColor
+        hexColor: colors.logger.div
       }
     ),
     new LogTag(
       {
         name: 'setup',
-        hexColor: '#38f581',
+        hexColor: colors.logger.tags.setup,
         spaceChar: spacerChar
       },
       {
@@ -28,13 +28,13 @@ const logger = new Log(
           start: tagStartEdge,
           end: tagEndEdge
         },
-        hexColor: tagColor
+        hexColor: colors.logger.div
       }
     ),
     new LogTag(
       {
         name: 'client',
-        hexColor: '#9738f5',
+        hexColor: colors.logger.tags.client,
         spaceChar: spacerChar
       },
       {
@@ -42,13 +42,13 @@ const logger = new Log(
           start: tagStartEdge,
           end: tagEndEdge
         },
-        hexColor: tagColor
+        hexColor: colors.logger.div
       }
     ),
     new LogTag(
       {
         name: 'events',
-        hexColor: '#384ef5',
+        hexColor: colors.logger.tags.events,
         spaceChar: spacerChar
       },
       {
@@ -56,13 +56,13 @@ const logger = new Log(
           start: tagStartEdge,
           end: tagEndEdge
         },
-        hexColor: tagColor
+        hexColor: colors.logger.div
       }
     ),
     new LogTag(
       {
         name: 'commands',
-        hexColor: '#fc039d',
+        hexColor: colors.logger.tags.commands,
         spaceChar: spacerChar
       },
       {
@@ -70,11 +70,11 @@ const logger = new Log(
           start: tagStartEdge,
           end: tagEndEdge
         },
-        hexColor: tagColor
+        hexColor: colors.logger.div
       }
     )
   ],
-  new LogLayerTab(spacerChar, 3, tagColor),
+  new LogLayerTab(spacerChar, 3, colors.logger.div),
   false,
   false,
   true

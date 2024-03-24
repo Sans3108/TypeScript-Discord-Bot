@@ -1,6 +1,9 @@
 /**
  * Represents an env variable.
+ *
+ * @format
  */
+
 export interface EnvVar {
   key: string;
   type: 'string' | 'number' | 'boolean';

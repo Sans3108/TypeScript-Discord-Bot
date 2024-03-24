@@ -30,7 +30,9 @@ const { DISCORD_CLIENT_TOKEN, DEV_MODE } = process.env;
 
 const dev = DEV_MODE === 'true';
 
-if (dev) log('setup', `Developer mode is ${c('ON', '#00ff00')}`);
+import { colors } from '@common/constants';
+
+log('setup', `Developer mode is ${c(dev ? 'ON' : 'OFF', colors.developerMode[dev ? 'on' : 'off'])}`);
 //#endregion
 
 //#region Imports
@@ -68,7 +70,7 @@ for (const commandFile of commandFiles) {
   const command: ChatInputCommand | MessageContextCommand | UserContextCommand = (await import(`./commands/${commandFile}`)).default;
   client.addCommand(command);
 
-  log('client', `Imported ${c(`${command.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(command.name, '#38c3f5')}`, 2);
+  log('client', `Imported ${c(`${command.type === CommandType.chatInput ? '/' : '*'}`, colors.command.symbol)} ${c(command.name, colors.command.name)}`, 2);
 }
 
 // Sending commands to discord
@@ -84,7 +86,7 @@ for (const eventFile of discordEventFiles) {
 
   client.on(event.type, event.execute);
 
-  log('events', `Imported & Loaded ${c(event.type, '#38c3f5')}`, 1);
+  log('events', `Imported & Loaded ${c(event.type, colors.event.name)}`, 1);
 }
 //#endregion
 

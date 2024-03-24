@@ -1,18 +1,8 @@
 import { CustomClient } from '@classes/client/CustomClient.js';
-import { developerIds, supportServer } from '@common/constants.js';
+import { colors, developerIds, supportServer } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
 import { emb } from '@utils';
-import {
-  ApplicationCommandType,
-  ChatInputCommandInteraction,
-  ContextMenuCommandBuilder,
-  MessageContextMenuCommandInteraction,
-  SlashCommandBuilder,
-  SlashCommandSubcommandsOnlyBuilder,
-  TimestampStyles,
-  UserContextMenuCommandInteraction,
-  time
-} from 'discord.js';
+import { ApplicationCommandType, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
 
 export enum CommandGroup {
   general
@@ -78,10 +68,7 @@ export abstract class BaseCommand {
     this.id = '0';
   }
 
-  protected async handleCooldown<T extends ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction>(
-    interaction: T,
-    execute: (interaction: T, client: CustomClient) => Promise<boolean>
-  ): Promise<CommandRunResult> {
+  protected async handleCooldown<T extends ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction>(interaction: T, execute: (interaction: T, client: CustomClient) => Promise<boolean>): Promise<CommandRunResult> {
     const client = interaction.client as CustomClient;
 
     const cooldownMap = client.commandCooldownMaps.get(this.name);
@@ -170,9 +157,12 @@ export class ChatInputCommand extends BaseCommand {
 
   public async run(interaction: ChatInputCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${c(this.type === CommandType.chatInput ? '/' : '*', colors.command.symbol)} ${c(this.name, colors.command.name)} but is not a developer.`);
 
-      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      await interaction.reply({
+        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        ephemeral: true
+      });
       return;
     }
 
@@ -182,15 +172,8 @@ export class ChatInputCommand extends BaseCommand {
 
     if (client.options.logCommandUses) {
       const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
-      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
 
-      log(
-        'commands',
-        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
-          this.name,
-          '#38c3f5'
-        )} with result: ${res}`
-      );
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, colors.command.symbol)} ${c(this.name, colors.command.name)} with result: ${res}`);
     }
   }
 
@@ -224,9 +207,12 @@ export class MessageContextCommand extends BaseCommand {
 
   public async run(interaction: MessageContextMenuCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${c(this.type === CommandType.chatInput ? '/' : '*', colors.command.symbol)} ${c(this.name, colors.command.name)} but is not a developer.`);
 
-      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      await interaction.reply({
+        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        ephemeral: true
+      });
       return;
     }
 
@@ -236,15 +222,8 @@ export class MessageContextCommand extends BaseCommand {
 
     if (client.options.logCommandUses) {
       const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
-      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
 
-      log(
-        'commands',
-        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
-          this.name,
-          '#38c3f5'
-        )} with result: ${res}`
-      );
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, colors.command.symbol)} ${c(this.name, colors.command.name)} with result: ${res}`);
     }
   }
 
@@ -278,9 +257,12 @@ export class UserContextCommand extends BaseCommand {
 
   public async run(interaction: UserContextMenuCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) tried to use developer command ${this.name} but is not a developer.`);
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${c(this.type === CommandType.chatInput ? '/' : '*', colors.command.symbol)} ${c(this.name, colors.command.name)} but is not a developer.`);
 
-      await interaction.reply({ embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)], ephemeral: true });
+      await interaction.reply({
+        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        ephemeral: true
+      });
       return;
     }
 
@@ -290,15 +272,8 @@ export class UserContextCommand extends BaseCommand {
 
     if (client.options.logCommandUses) {
       const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
-      const type = Object.keys(CommandType).find(key => CommandType[key as keyof typeof CommandType] === this.type)!;
 
-      log(
-        'commands',
-        `${c(interaction.user.username, '#3ff293')} (${c(interaction.user.id, '#3ff2b6')}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, '#4538f5')} ${c(
-          this.name,
-          '#38c3f5'
-        )} with result: ${res}`
-      );
+      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) used ${c(`${this.type === CommandType.chatInput ? '/' : '*'}`, colors.command.symbol)} ${c(this.name, colors.command.name)} with result: ${res}`);
     }
   }
 
