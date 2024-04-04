@@ -21,7 +21,7 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "typescript": "^5.4.3",
-    "undici": "^6.10.1"
+    "undici": "^6.10.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.1",
