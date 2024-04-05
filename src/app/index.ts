@@ -7,7 +7,7 @@ log('setup', 'Logger loaded!');
 //#region Environment variables
 log('setup', 'Loading environment variables...');
 
-import { checkEnv } from '@scripts/checkEnv.js';
+import { checkEnv } from 'utils/functions/checkEnv.js';
 import 'dotenv/config';
 
 try {

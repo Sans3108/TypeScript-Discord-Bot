@@ -11,8 +11,7 @@ export enum CommandGroup {
 export enum CommandType {
   chatInput,
   messageContext,
-  userContext,
-  button
+  userContext
 }
 
 export interface CommandOptionsMetadata {
@@ -284,53 +283,9 @@ export class UserContextCommand extends BaseCommand {
 }
 //#endregion
 
-//#region Button Command
-export interface ButtonCommandOptions extends BaseCommandOptions {
-  execute: (interaction: ButtonInteraction, client: CustomClient) => Promise<boolean>;
-}
-
-export class ButtonCommand extends BaseCommand {
-  protected readonly execute: (interaction: ButtonInteraction, client: CustomClient) => Promise<boolean>;
-
-  public readonly type: CommandType = CommandType.button;
-
-  constructor(options: ButtonCommandOptions) {
-    super(options);
-    this.execute = options.execute;
-  }
-
-  public async run(interaction: ButtonInteraction): Promise<void> {
-    if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} but is not a developer.`);
-
-      await interaction.reply({
-        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
-        ephemeral: true
-      });
-      return;
-    }
-
-    const result = await this.handleCooldown(interaction, this.execute);
-
-    const client = interaction.client as CustomClient;
-
-    if (client.options.logCommandUses) {
-      const res = Object.keys(CommandRunResult).find(key => CommandRunResult[key as keyof typeof CommandRunResult] === result)!;
-
-      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) used ${loggedCommand(this)} ${c(this.name, colors.command.name)} with result: ${res}`);
-    }
-  }
-
-  toString() {
-    return `\`~ ${this.name}\``;
-  }
-}
-//#endregion
-
 export abstract class Command {
   public static ChatInput = ChatInputCommand;
   public static MessageContext = MessageContextCommand;
   public static UserContext = UserContextCommand;
-  public static Button = ButtonCommand;
 }
 // gyuildonly alwayts

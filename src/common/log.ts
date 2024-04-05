@@ -1,3 +1,6 @@
+// The purpose of this file is to customize the custom Logger defined in src/classes/Logger
+// and to export a function that can be easily used to log different things
+
 import { Log, LogLayerTab, LogTag, ValidLogTagNames } from '@classes/Logger.js';
 import { colors, spacerChar, tagEndEdge, tagStartEdge } from '@common/constants.js';
 
