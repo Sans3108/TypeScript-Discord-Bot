@@ -43,10 +43,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { ChatInputCommand, CommandType, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
+import { ChatInputCommand, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { deployCommands } from '@scripts/deployCommands.js';
+import { loggedCommand } from '@utils';
 //#endregion
 
 //#region Discord client setup
@@ -70,7 +71,7 @@ for (const commandFile of commandFiles) {
   const command: ChatInputCommand | MessageContextCommand | UserContextCommand = (await import(`./commands/${commandFile}`)).default;
   client.addCommand(command);
 
-  log('client', `Imported ${c(`${command.type === CommandType.chatInput ? '/' : '*'}`, colors.command.symbol)} ${c(command.name, colors.command.name)}`, 2);
+  log('client', `Imported ${loggedCommand(command)}`, 2);
 }
 
 // Sending commands to discord

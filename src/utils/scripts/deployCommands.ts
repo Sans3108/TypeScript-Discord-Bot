@@ -1,8 +1,7 @@
-import { CommandType } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { colors } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
-import { idFromToken } from '@utils';
+import { idFromToken, loggedCommand } from '@utils';
 import { APIApplicationCommand, REST, Routes } from 'discord.js';
 
 export async function deployCommands(client: CustomClient, dev: boolean) {
@@ -43,7 +42,7 @@ export async function deployCommands(client: CustomClient, dev: boolean) {
   for (const command of client.commands.values()) {
     const apiCommand = data.find(c => c.name === command.name)!;
     command.id = apiCommand.id;
-    log('client', `Gathered ID for ${c(command.type === CommandType.chatInput ? '/' : '*', colors.command.symbol)} ${c(command.name, colors.command.name)} (${c(command.id, colors.command.id)})`, 3);
+    log('client', `Gathered ID for ${loggedCommand(command)} (${c(command.id, colors.command.id)})`, 3);
   }
 
   log('client', `Refreshed API commands.`, 1);

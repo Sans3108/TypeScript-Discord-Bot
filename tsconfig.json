@@ -28,6 +28,6 @@
       "@scripts/*": ["utils/scripts/*"]
     }
   },
-  "include": ["./src/**/*", "src/app/commands/help.ts", "src/app/commands/eval.ts"],
+  "include": ["./src/**/*"],
   "exclude": ["node_modules"]
 }
