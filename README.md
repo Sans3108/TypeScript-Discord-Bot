@@ -12,7 +12,7 @@ My go-to template for building Discord bots with TypeScript & discord.js
 
 ## How to use
 
-- Click on the `Use this template` and create a new repository with your desired name.
+- Click on the `Use this template` button and create a new repository with your desired name.
 - Clone your brand new repository, open it in your IDE of choice and start editing.
 - When you are ready to run your bot:
   - Copy and paste `.env.example`, rename it to `.env` and replace the values inside with your environment variables.
@@ -21,7 +21,7 @@ My go-to template for building Discord bots with TypeScript & discord.js
 
 ## Contributing
 
-- There are no real guidelines for contributing, the only thing that must be done however is making sure the `prettier` script is ran before opening a pull request.
+- There are no real guidelines for contributing, the only thing that must be done however, is making sure the `prettier` script is ran before opening a pull request.
 
 #### To-Do's:
 
