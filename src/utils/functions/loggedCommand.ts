@@ -1,5 +1,5 @@
-import { ChatInputCommand, CommandType, MessageContextCommand, UserContextCommand } from '@classes/client/Command';
-import { colors } from '@common/constants';
+import { ChatInputCommand, CommandType, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
+import { colors } from '@common/constants.js';
 import { c } from '@log';
 
 export function loggedCommand(command: ChatInputCommand | UserContextCommand | MessageContextCommand) {

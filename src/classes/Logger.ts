@@ -13,28 +13,9 @@ export const ValidLogTagNames = {
   events: 'Events',
   setup: 'Setup',
   error: 'Error',
-  commands: 'Commands'
+  commands: 'Commands',
+  process: 'Process'
 };
-
-function generatePaddedValues(strings: { [K in keyof typeof ValidLogTagNames]: string }): {
-  [K in keyof typeof ValidLogTagNames]: number;
-} {
-  const maxLength = Math.max(...Object.values(strings).map(str => str.length));
-
-  // @ts-expect-error
-  const paddedValues: { [K in keyof typeof ValidLogTagNames]: number } = {};
-
-  for (const key in strings) {
-    const str = strings[key as keyof typeof ValidLogTagNames];
-
-    paddedValues[key as keyof typeof ValidLogTagNames] = maxLength - str.length;
-  }
-
-  return paddedValues;
-}
-
-// Generate padded values for ValidLogTagNames
-export const ValidLogTagNamePadding = generatePaddedValues(ValidLogTagNames);
 
 export interface LogTagName {
   readonly name: keyof typeof ValidLogTagNames;
@@ -56,21 +37,23 @@ export class LogTag {
     public readonly tagEdges: LogTagEdges
   ) {}
 
-  toString(padding = 0) {
+  toString() {
     const nameCol = chalk.hex(this.tagName.hexColor);
     const edgeCol = chalk.hex(this.tagEdges.hexColor);
 
-    const padLeftAmount = Math.floor(padding / 2);
-    const padRightAmount = Math.floor(padding / 2) + (padding % 2);
+    const longestTag = Object.values(ValidLogTagNames).sort((a, b) => b.length - a.length)[0];
 
-    const paddingLeft = padLeftAmount === 0 ? '' : this.tagName.spaceChar.repeat(padLeftAmount - 1) + ' ';
-    const paddingRight = padRightAmount === 0 ? '' : ' ' + this.tagName.spaceChar.repeat(padRightAmount - 1);
+    const tag = ValidLogTagNames[this.tagName.name];
 
-    const name = nameCol(`${edgeCol(paddingLeft)}${ValidLogTagNames[this.tagName.name]}${edgeCol(paddingRight)}`);
+    const padding = ' '.repeat(Math.floor((longestTag.length - tag.length) / 2));
+    const even = ' '.repeat((longestTag.length - tag.length) % 2);
+
+    const name = nameCol(`${padding}${tag}${even}${padding}`);
+
     const start = edgeCol(this.tagEdges.chars.start);
     const end = edgeCol(this.tagEdges.chars.end);
 
-    return `${start}${name}${end}`;
+    return `${start} ${name} ${end}`;
   }
 }
 
@@ -115,7 +98,7 @@ export class Log {
   constructor(tags: ReadonlyArray<LogTag>, layerTab: LogLayerTab, spaceAfterTag = true, spaceBetweenLayers = true, spaceBeforeMessage = true) {
     this.tags = tags.map(t => ({
       id: t.tagName.name,
-      tag: t.toString(ValidLogTagNamePadding[t.tagName.name])
+      tag: t.toString()
     }));
     this.spaceAfterTag = spaceAfterTag;
     this.layerTab = layerTab;

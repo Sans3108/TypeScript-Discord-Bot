@@ -4,10 +4,17 @@ import { c, handleErr, log } from '@log';
 log('setup', 'Logger loaded!');
 //#endregion
 
+//#region Args
+import { handleArgs } from '@scripts/handleArgs.js';
+import { colors } from '@common/constants.js';
+
+const argOptions = handleArgs();
+//#endregion
+
 //#region Environment variables
 log('setup', 'Loading environment variables...');
 
-import { checkEnv } from 'utils/functions/checkEnv.js';
+import { checkEnv, loggedCommand } from '@utils';
 import 'dotenv/config';
 
 try {
@@ -30,8 +37,6 @@ const { DISCORD_CLIENT_TOKEN, DEV_MODE } = process.env;
 
 const dev = DEV_MODE === 'true';
 
-import { colors } from '@common/constants.js';
-
 log('setup', `Developer mode is ${c(dev ? 'ON' : 'OFF', colors.developerMode[dev ? 'on' : 'off'])}`);
 //#endregion
 
@@ -47,7 +52,6 @@ import { ChatInputCommand, MessageContextCommand, UserContextCommand } from '@cl
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { deployCommands } from '@scripts/deployCommands.js';
-import { loggedCommand } from '@utils';
 //#endregion
 
 //#region Discord client setup
@@ -75,8 +79,12 @@ for (const commandFile of commandFiles) {
 }
 
 // Sending commands to discord
-log('client', 'Refreshing API commands', 1);
-await deployCommands(client, dev);
+if (!argOptions.skipDeploy) {
+  log('client', 'Refreshing API commands', 1);
+  await deployCommands(client, dev);
+} else {
+  log('client', `Skipped refreshing API commands, no command IDs will be gathered!`, 1);
+}
 
 // Events
 log('events', `Setting up Discord events`);

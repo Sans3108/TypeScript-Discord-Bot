@@ -1,6 +1,8 @@
 // The purpose of this file is to customize the custom Logger defined in src/classes/Logger
 // and to export a function that can be easily used to log different things
 
+// TODO: Simplify this or use an actual logging npm package
+
 import { Log, LogLayerTab, LogTag, ValidLogTagNames } from '@classes/Logger.js';
 import { colors, spacerChar, tagEndEdge, tagStartEdge } from '@common/constants.js';
 
@@ -66,6 +68,20 @@ const logger = new Log(
       {
         name: 'commands',
         hexColor: colors.logger.tags.commands,
+        spaceChar: spacerChar
+      },
+      {
+        chars: {
+          start: tagStartEdge,
+          end: tagEndEdge
+        },
+        hexColor: colors.logger.div
+      }
+    ),
+    new LogTag(
+      {
+        name: 'process',
+        hexColor: colors.logger.tags.process,
         spaceChar: spacerChar
       },
       {

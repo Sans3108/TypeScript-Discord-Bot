@@ -37,9 +37,11 @@ export const colors = {
       setup: '#38f581',
       client: '#9738f5',
       events: '#384ef5',
-      commands: '#fc039d'
+      commands: '#fc039d',
+      process: '#fcc203'
     },
     div: '#363636'
   },
-  number: '#3ff2b6'
+  number: '#3ff2b6',
+  string: '#cefc03'
 } as const;
