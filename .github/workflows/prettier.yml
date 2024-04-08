@@ -1,3 +1,5 @@
+name: Prettier
+
 on:
   push:
     branches:
@@ -15,6 +17,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Install pnpm
+      run: npm install -g pnpm
 
     - name: Install dependencies
       run: pnpm install
