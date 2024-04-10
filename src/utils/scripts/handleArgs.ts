@@ -20,7 +20,7 @@ export const argMap: Readonly<ProcessArg[]> = Object.freeze<ProcessArg[]>([
   }
 ]);
 
-export function handleArgs(): { skipDeploy: boolean } {
+export function handleArgs(processArgs: string[]): { skipDeploy: boolean } {
   const validArgs = argMap.flatMap(a => {
     const validArgNames = [`--${a.name}`];
 
@@ -31,7 +31,7 @@ export function handleArgs(): { skipDeploy: boolean } {
 
   const args = [
     ...new Set(
-      process.argv
+      processArgs
         .slice(2) // slice node executable and filename from args
         .filter(arg => validArgs.includes(arg)) // filter for supported args
         .map(arg => {
