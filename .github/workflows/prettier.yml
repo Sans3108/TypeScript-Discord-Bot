@@ -3,26 +3,26 @@ name: Prettier
 on:
   push:
     branches:
-    - main
+      - 'main'
   pull_request:
     branches:
-    - main
+      - 'main'
   workflow_dispatch:
 
 jobs:
-  prettier:
-    name: Run prettier script
+  Install_Deps_And_Run_Script:
+    name: 'Run prettier script'
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: 'Checkout code'
+        uses: actions/checkout@v2
 
-    - name: Install pnpm
-      run: npm install -g pnpm
+      - name: 'Install pnpm'
+        run: 'npm install -g pnpm'
 
-    - name: Install dependencies
-      run: pnpm install
+      - name: 'Install dependencies'
+        run: 'pnpm install'
 
-    - name: Run script
-      run: pnpm run prettier
+      - name: 'Run script'
+        run: 'pnpm run prettier'
