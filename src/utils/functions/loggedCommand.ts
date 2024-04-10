@@ -2,7 +2,7 @@ import { ChatInputCommand, CommandType, MessageContextCommand, UserContextComman
 import { colors } from '@common/constants.js';
 import { c } from '@log';
 
-export function loggedCommand(command: ChatInputCommand | UserContextCommand | MessageContextCommand) {
+export function loggedCommand(command: ChatInputCommand | UserContextCommand | MessageContextCommand): string {
   const symbol =
     command.type === CommandType.chatInput ? '/'
     : command.type === CommandType.messageContext || command.type === CommandType.userContext ? '*'
