@@ -1,6 +1,6 @@
 export const tagStartEdge = '❮' as const;
 export const tagEndEdge = '❯' as const;
-export const spacerChar = '─' as const;
+export const spacerChar = '───' as const;
 export const developerIds = ['366536353418182657'];
 export const botInvite = 'https://google.com';
 export const supportServer = 'https://google.com';
@@ -32,6 +32,7 @@ export const colors = {
     wait: '#9E5B70'
   },
   logger: {
+    default: '#ffffff',
     tags: {
       error: '#f54b38',
       setup: '#38f581',
