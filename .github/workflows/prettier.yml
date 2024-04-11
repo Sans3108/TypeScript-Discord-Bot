@@ -37,7 +37,7 @@ jobs:
         run: pnpm install
 
       - name: Run prettier
-        run: pnpm prettier
+        run: pnpm prettier:src
 
       - name: Check for modified files
         id: git-check
