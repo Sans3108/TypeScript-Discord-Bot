@@ -288,4 +288,3 @@ export abstract class Command {
   public static MessageContext = MessageContextCommand;
   public static UserContext = UserContextCommand;
 }
-// gyuildonly alwayts
