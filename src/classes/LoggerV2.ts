@@ -1,12 +1,16 @@
-import { HexColor } from '@utils';
+import { HexColor, isHexColor } from '@utils';
 
-export type NonEmptyArray<T> = [T, ...T[]];
-
+/**
+ * Interface representing a {@link Logger} tag, with it's color
+ */
 export interface Tag {
   name: string;
   color?: HexColor;
 }
 
+/**
+ * Interface representing symbols used for the {@link Logger} class
+ */
 export interface Symbols {
   tag?: {
     start?: string;
@@ -15,6 +19,9 @@ export interface Symbols {
   tab?: string;
 }
 
+/**
+ * {@link Logger} options
+ */
 export interface LoggerOptions {
   symbols?: Symbols;
   tabColor?: HexColor;
@@ -22,9 +29,11 @@ export interface LoggerOptions {
 
 export class Logger {
   constructor(tagList: NonEmptyArray<Tag>, options: LoggerOptions = {}) {
-    const tags: NonEmptyArray<Required<Tag>> = tagList.map(tag => ({ name: tag.name, color: tag.color ?? '#ffffff' })) as NonEmptyArray<Required<Tag>>;
+    const tags: Required<Tag>[] = tagList.map(tag => ({ name: tag.name, color: tag.color ?? '#ffffff' }));
 
-    const opts: Omit<Required<LoggerOptions>, 'symbols'> & { symbols: Omit<Required<Symbols>, 'tag'> & { tag: Required<{ start: string; end: string }> } } = {
+    if (isHexColor(tags[0].color)) console.log('valid');
+
+    const opts: DeepRequired<LoggerOptions> = {
       symbols: {
         tag: {
           start: options.symbols?.tag?.start ?? '[',
