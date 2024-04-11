@@ -1,5 +1,8 @@
 name: Prettier Formatting
 
+env:
+  files_modified:
+
 on:
   push:
     branches:
