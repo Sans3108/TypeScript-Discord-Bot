@@ -11,7 +11,8 @@
     "dev": "pnpm cleanup && pnpm build && node --enable-source-maps .",
     "start": "node --enable-source-maps .",
     "cleanup": "rmdir /s /q dist",
-    "prettier": "prettier . --write"
+    "prettier:all": "prettier . --write",
+    "prettier:src": "prettier src --write"
   },
   "keywords": [],
   "author": "Sans3108",
