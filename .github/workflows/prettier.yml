@@ -1,11 +1,11 @@
-name: Auto-Format TypeScript
+name: Prettier Formatting
 
 on:
   push:
-      branches:
-        - '**'
-      paths:
-        - '**/*.ts'
+    branches:
+      - '**'
+    paths:
+      - '**/*.ts'
   pull_request:
     paths:
       - '**/*.ts'
@@ -17,7 +17,6 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository ||
       (github.event_name == 'push' && startsWith(github.event.head_commit.message, '[bot]') == false)
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -27,9 +26,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }} # Use the GitHub token for authentication
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16' # Feel free to adjust to your project's Node.js version
+          node-version-file: 'package.json' # Grabs node version from package.json
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -56,5 +55,5 @@ jobs:
           git config --global user.email 'actions@github.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git add -A
-          git commit -m "[bot] Automate code formatting with prettier"
+          git commit -m "[bot] Prettier: Format files"
           git push
