@@ -41,7 +41,7 @@ export const colors = {
       commands: '#fc039d',
       process: '#fcc203'
     },
-    div: '#363636'
+    div: '#4a4a4a'
   },
   number: '#3ff2b6',
   string: '#cefc03'
