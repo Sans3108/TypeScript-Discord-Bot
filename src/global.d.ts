@@ -4,7 +4,8 @@ declare global {
     interface ProcessEnv {
       DISCORD_CLIENT_TOKEN: string;
       DEV_DISCORD_GUILD_ID: string;
-      DEV_MODE: string;    }
+      DEV_MODE: string;
+    }
   }
 
   // Custom, global utility types
