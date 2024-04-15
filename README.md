@@ -1,5 +1,7 @@
 # TypeScript-Discord-Bot
 
+[![CodeQL](https://github.com/Sans3108/TypeScript-Discord-Bot/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Sans3108/TypeScript-Discord-Bot/actions/workflows/github-code-scanning/codeql)
+
 My go-to template for building Discord bots with TypeScript & discord.js
 
 ## Requirements

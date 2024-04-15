@@ -4,14 +4,9 @@ env:
   files_modified:
 
 on:
-  push:
-    branches:
-      - '**'
-    paths:
-      - '**/*.ts'
   pull_request:
-    paths:
-      - '**/*.ts'
+  push:
+    branches: [master]
 
 jobs:
   format:
