@@ -2,7 +2,7 @@ import { CustomClient } from '@classes/client/CustomClient.js';
 import { colors, developerIds, supportServer } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
 import { emb, loggedCommand } from '@utils';
-import { ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
+import { ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
 
 export enum CommandGroup {
   general
@@ -132,7 +132,7 @@ export abstract class BaseCommand {
 //#endregion
 
 //#region ChatInput Command
-export type SlashCommandBuilderTypes = SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> | SlashCommandSubcommandsOnlyBuilder;
+export type SlashCommandBuilderTypes = SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder;
 
 export interface ChatInputCommandOptions extends BaseCommandOptions {
   builder: SlashCommandBuilderTypes;
