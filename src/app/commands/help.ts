@@ -4,16 +4,7 @@ import { capitalize, formatTime } from '@utils';
 import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } 
-
-
-
-
-
-
-from 'url';
-
-
+import { fileURLToPath } from 'url';
 
 // Hacky way of doing circulars
 const __filename = fileURLToPath(import.meta.url);
