@@ -1,39 +1,11 @@
-import { ChatInputCommand, Command, CommandGroup, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
+import { Command, CommandGroup } from '@classes/client/Command.js';
 import { botInvite, colors, supportServer } from '@common/constants.js';
 import { capitalize, formatTime } from '@utils';
-import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Hacky way of doing circulars
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const commandFiles = fs.readdirSync(path.join(__dirname)).filter(file => file.endsWith('.js'));
-
-const commands: Collection<string, ChatInputCommand | MessageContextCommand | UserContextCommand> = new Collection();
-
-for (const commandFile of commandFiles) {
-  if (commandFile === path.basename(__filename)) continue;
-
-  const command: ChatInputCommand | MessageContextCommand | UserContextCommand = (await import(`./${commandFile}`)).default;
-
-  if (command.developer) continue;
-
-  commands.set(command.name, command);
-}
+import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
 export default new Command.ChatInput({
   builder: new SlashCommandBuilder().addStringOption(option => {
-    const options = commands.map(command => ({ name: command.name, value: command.name }));
-
-    options.push({ name: 'help', value: 'help' });
-
-    option
-      .setName('command')
-      .setDescription('The command you need help with.')
-      .setChoices(...options);
+    option.setName('command').setDescription('The command you need help with.').setAutocomplete(true);
 
     return option;
   }),
@@ -46,14 +18,19 @@ export default new Command.ChatInput({
   },
   execute: async function (interaction, client) {
     // TODO: Add more info (such as usage) to commands
-    const helpCommand = client.commands.get('help') as ChatInputCommand;
-
-    commands.set(helpCommand.name, helpCommand);
 
     const commandOption = interaction.options.getString('command');
 
     if (commandOption) {
-      const command = commands.get(commandOption)!;
+      const command = client.commands.get(commandOption);
+
+      if (!command) {
+        const unknownCommand = new EmbedBuilder().setColor(colors.embedColors.info).setTitle(`Unknown command`).setDescription(`Command \`${commandOption}\` doesn't exist!`).setThumbnail(client.user.displayAvatarURL()).setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() }).setTimestamp();
+
+        await interaction.reply({ embeds: [unknownCommand] });
+
+        return false;
+      }
 
       const commandGroup = Object.keys(CommandGroup)
         .find(key => CommandGroup[key as keyof typeof CommandGroup] === command.group)!
@@ -77,10 +54,10 @@ export default new Command.ChatInput({
     }
 
     const commandGroups: APIEmbedField[] = Object.keys(CommandGroup)
-      .filter(value => commands.filter(c => c.group === CommandGroup[value as keyof typeof CommandGroup]).size > 0)
+      .filter(value => client.commands.filter(c => c.group === CommandGroup[value as keyof typeof CommandGroup]).size > 0)
       .map(value => ({
         name: `**${capitalize(value.toLowerCase())} commands:**`,
-        value: commands
+        value: client.commands
           .filter(c => c.group === CommandGroup[value as keyof typeof CommandGroup])
           .map(c => `${c} - ${c.description}`)
           .join('\n')
@@ -107,5 +84,15 @@ export default new Command.ChatInput({
     await interaction.reply({ embeds: [commandsEmbed], components: [row] });
 
     return true;
+  },
+  handleAutocomplete: async function (interaction, client) {
+    const focusedOption = interaction.options.getFocused(true);
+
+    if (focusedOption.name === 'command') {
+      const choices: string[] = client.commands.map(c => c.name);
+
+      const filtered = choices.filter(choice => choice.startsWith(focusedOption.value));
+      await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
+    }
   }
 });
