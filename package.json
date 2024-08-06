@@ -10,7 +10,7 @@
     "build": "tsc && babel dist --out-dir dist",
     "dev": "pnpm cleanup && pnpm build && node --enable-source-maps .",
     "start": "node --enable-source-maps .",
-    "cleanup": "rmdir /s /q dist",
+    "cleanup": "rimraf dist",
     "prettier": "prettier . --write"
   },
   "keywords": [],
@@ -27,6 +27,7 @@
     "@babel/cli": "^7.24.6",
     "@types/node": "20.10.0",
     "babel-plugin-root-import": "^6.6.0",
-    "prettier": "3.3.0"
+    "prettier": "3.3.0",
+    "rimraf": "^6.0.1"
   }
 }
