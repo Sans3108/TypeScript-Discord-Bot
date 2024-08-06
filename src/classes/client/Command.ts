@@ -2,7 +2,7 @@ import { CustomClient } from '@classes/client/CustomClient.js';
 import { colors, developerIds, supportServer } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
 import { emb, loggedCommand } from '@utils';
-import { ApplicationCommandType, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
+import { ApplicationCommandType, AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
 
 export enum CommandGroup {
   general
@@ -137,6 +137,7 @@ export type SlashCommandBuilderTypes = SlashCommandBuilder | Omit<SlashCommandBu
 export interface ChatInputCommandOptions extends BaseCommandOptions {
   builder: SlashCommandBuilderTypes;
   execute: (interaction: ChatInputCommandInteraction, client: CustomClient) => Promise<boolean>;
+  handleAutocomplete?: (interaction: AutocompleteInteraction, client: CustomClient) => Promise<unknown>;
 }
 
 export class ChatInputCommand extends BaseCommand {
@@ -144,6 +145,8 @@ export class ChatInputCommand extends BaseCommand {
   protected readonly execute: (interaction: ChatInputCommandInteraction, client: CustomClient) => Promise<boolean>;
 
   public readonly type: CommandType = CommandType.chatInput;
+
+  public readonly handleAutocomplete?: (interaction: AutocompleteInteraction, client: CustomClient) => Promise<unknown>;
 
   constructor(options: ChatInputCommandOptions) {
     super(options);
@@ -153,6 +156,10 @@ export class ChatInputCommand extends BaseCommand {
     this.builder.setName(this.name);
     this.builder.setDescription(this.description);
     this.builder.setDMPermission(!this.guildOnly);
+
+    if (options.handleAutocomplete) {
+      this.handleAutocomplete = options.handleAutocomplete;
+    }
   }
 
   public async run(interaction: ChatInputCommandInteraction): Promise<void> {

@@ -1,15 +1,24 @@
+import { ChatInputCommand } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { handleErr } from '@log';
 
 export default new DiscordEvent('interactionCreate', async interaction => {
-  const isCommand = interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand();
+  const client = interaction.client as CustomClient;
+
+  const isCommand = interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand() || interaction.isAutocomplete();
 
   if (!isCommand) return;
 
-  const client = interaction.client as CustomClient;
-
   const command = client.commands.get(interaction.commandName)!;
+
+  if (interaction.isAutocomplete()) {
+    if (command instanceof ChatInputCommand && command.handleAutocomplete) {
+      await command.handleAutocomplete(interaction, client);
+      return;
+    }
+    return;
+  }
 
   try {
     //@ts-expect-error
