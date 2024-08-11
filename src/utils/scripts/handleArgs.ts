@@ -1,5 +1,6 @@
 import { colors } from '@common/constants.js';
-import { c, log } from '@log';
+import { c, handleErr, log } from '@log';
+import { resetCommands } from '@scripts/resetCommands.js';
 
 export interface ProcessArg {
   readonly name: string;
@@ -17,10 +18,15 @@ export const argMap: Readonly<ProcessArg[]> = Object.freeze<ProcessArg[]>([
     name: 'skip-deploy',
     alias: 's',
     description: 'Skip refreshing commands with the Discord API.'
+  },
+  {
+    name: 'reset-commands',
+    alias: 'r',
+    description: 'Resets global and dev guild commands.'
   }
 ]);
 
-export function handleArgs(processArgs: string[]): { skipDeploy: boolean } {
+export async function handleArgs(processArgs: string[]): Promise<{ skipDeploy: boolean }> {
   const validArgs = argMap.flatMap(a => {
     const validArgNames = [`--${a.name}`];
 
@@ -52,6 +58,28 @@ export function handleArgs(processArgs: string[]): { skipDeploy: boolean } {
       log('process', `${c(`--${arg.name}`, colors.string)}${arg.alias ? `, ${c(`-${arg.alias}`, colors.string)}` : ''}`);
       log('process', arg.description ?? 'No argument description.');
     }
+
+    process.exit(0);
+  }
+
+  if (args.includes('help')) {
+    log('process', `Command line arguments help:`);
+
+    for (const arg of argMap) {
+      log('process', '');
+      log('process', `${c(`--${arg.name}`, colors.string)}${arg.alias ? `, ${c(`-${arg.alias}`, colors.string)}` : ''}`);
+      log('process', arg.description ?? 'No argument description.');
+    }
+
+    process.exit(0);
+  }
+
+  if (args.includes('reset-commands')) {
+    log('process', 'Resetting global and dev guild commands...');
+
+    await resetCommands()
+      .then(() => log('process', 'Commands reset successfully.'))
+      .catch(handleErr);
 
     process.exit(0);
   }
