@@ -8,7 +8,7 @@ log('setup', 'Logger loaded!');
 import { handleArgs } from '@scripts/handleArgs.js';
 import { colors } from '@common/constants.js';
 
-const argOptions = handleArgs(process.argv);
+const argOptions = await handleArgs(process.argv);
 //#endregion
 
 //#region Environment variables
