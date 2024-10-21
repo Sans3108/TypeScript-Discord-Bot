@@ -1,7 +1,7 @@
 import { Command, CommandGroup } from '@classes/client/Command.js';
-import { botInvite, colors, supportServer } from '@common/constants.js';
+import { colors, supportServer } from '@common/constants.js';
 import { capitalize, formatTime } from '@utils';
-import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, OAuth2Scopes, SlashCommandBuilder } from 'discord.js';
 
 export default new Command.ChatInput({
   builder: new SlashCommandBuilder().addStringOption(option => {
@@ -12,9 +12,11 @@ export default new Command.ChatInput({
   metadata: {
     name: 'help',
     description: 'Get a list of commands or help with a specific command.',
-    cooldown: 5,
+    cooldownSeconds: 5,
     group: CommandGroup.general,
-    guildOnly: false
+    guildInstalled: true,
+    userInstalled: true,
+    contexts: true
   },
   execute: async function (interaction, client) {
     // TODO: Add more info (such as usage) to commands
@@ -25,9 +27,15 @@ export default new Command.ChatInput({
       const command = client.commands.get(commandOption);
 
       if (!command) {
-        const unknownCommand = new EmbedBuilder().setColor(colors.embedColors.info).setTitle(`Unknown command`).setDescription(`Command \`${commandOption}\` doesn't exist!`).setThumbnail(client.user.displayAvatarURL()).setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() }).setTimestamp();
+        const unknownCommand = new EmbedBuilder()
+          .setColor(colors.embedColors.info)
+          .setTitle(`Unknown command`)
+          .setDescription(`Command \`${commandOption}\` doesn't exist!`)
+          .setThumbnail(client.user.displayAvatarURL())
+          .setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() })
+          .setTimestamp();
 
-        await interaction.reply({ embeds: [unknownCommand] });
+        await interaction.reply({ embeds: [unknownCommand], ephemeral: true });
 
         return false;
       }
@@ -49,7 +57,7 @@ export default new Command.ChatInput({
         .setThumbnail(client.user.displayAvatarURL())
         .setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() })
         .setTimestamp();
-      await interaction.reply({ embeds: [commandHelp] });
+      await interaction.reply({ embeds: [commandHelp], ephemeral: true });
       return true;
     }
 
@@ -77,11 +85,15 @@ export default new Command.ChatInput({
       .setTimestamp();
 
     const supportServerLinkButton = new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(supportServer).setLabel(`Support Server`).setEmoji('🔗');
-    const botInviteLinkButton = new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(botInvite).setLabel(`Bot Invite`).setEmoji('🔗');
+    const botInviteLinkButton = new ButtonBuilder()
+      .setStyle(ButtonStyle.Link)
+      .setURL(`https://discord.com/oauth2/authorize?client_id=${client.user.id}`)
+      .setLabel(`Add ${client.user.displayName}`)
+      .setEmoji('🔗');
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(supportServerLinkButton, botInviteLinkButton);
 
-    await interaction.reply({ embeds: [commandsEmbed], components: [row] });
+    await interaction.reply({ embeds: [commandsEmbed], components: [row], ephemeral: true });
 
     return true;
   },

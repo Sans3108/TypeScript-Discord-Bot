@@ -4,29 +4,32 @@ import { c, handleErr, log } from '@log';
 import { idFromToken, loggedCommand } from '@utils';
 import { APIApplicationCommand, REST, Routes } from 'discord.js';
 
-export async function deployCommands(client: CustomClient, dev: boolean) {
+export async function deployCommands(client: CustomClient, dev: boolean, empty = false) {
   const { DEV_DISCORD_GUILD_ID, DISCORD_CLIENT_TOKEN } = process.env;
 
   const clientId = idFromToken(DISCORD_CLIENT_TOKEN);
 
   const rest = new REST({ version: '10' }).setToken(DISCORD_CLIENT_TOKEN);
 
-  const commands = client.commands.map(command => {
-    let data;
+  const commands =
+    empty ?
+      []
+    : client.commands.map(command => {
+        let data;
 
-    try {
-      data = command.builder.toJSON();
-    } catch (e) {
-      log('error', `${c(command.name, colors.command.name)} failed:`);
-      handleErr(e as Error);
-    }
+        try {
+          data = command.builder.toJSON();
+        } catch (e) {
+          log('error', `${c(command.name, colors.command.name)} failed:`);
+          handleErr(e as Error);
+        }
 
-    return data;
-  });
+        return data;
+      });
 
-  log('client', `Sending ${c(`${client.commands.size}`, colors.number)} commands`, 2);
+  if (!empty) log('client', `Sending ${c(`${Array.from(commands.entries()).length}`, colors.number)} commands`, 2);
 
-  log('client', `Retrieving command ID's`, 2);
+  if (!empty) log('client', `Retrieving command ID's`, 2);
 
   let data: APIApplicationCommand[];
   if (dev) {
@@ -39,11 +42,13 @@ export async function deployCommands(client: CustomClient, dev: boolean) {
     })) as APIApplicationCommand[];
   }
 
-  for (const command of client.commands.values()) {
-    const apiCommand = data.find(c => c.name === command.name)!;
-    command.id = apiCommand.id;
-    log('client', `Gathered ID for ${loggedCommand(command)} (${c(command.id, colors.command.id)})`, 3);
+  if (!empty) {
+    for (const command of client.commands.values()) {
+      const apiCommand = data.find(c => c.name === command.name)!;
+      command.id = apiCommand.id;
+      log('client', `Gathered ID for ${loggedCommand(command)} (${c(command.id, colors.command.id)})`, 3);
+    }
   }
 
-  log('client', `Refreshed API commands.`, 1);
+  empty ? log('client', `Removed all API commands`, 1) : log('client', `Deployed API commands`, 1);
 }

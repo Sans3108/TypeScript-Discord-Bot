@@ -6,7 +6,8 @@ import { handleErr } from '@log';
 export default new DiscordEvent('interactionCreate', async interaction => {
   const client = interaction.client as CustomClient;
 
-  const isCommand = interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand() || interaction.isAutocomplete();
+  const isCommand =
+    interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand() || interaction.isAutocomplete();
 
   if (!isCommand) return;
 
@@ -28,7 +29,7 @@ export default new DiscordEvent('interactionCreate', async interaction => {
 
     handleErr(err);
 
-    const reply = { content: 'There was an error while executing this command!', ephemeral: true };
+    const reply = { content: 'There was an error while running this command!', ephemeral: true };
 
     if (interaction.replied || interaction.deferred) {
       await interaction.editReply(reply).catch(handleErr);

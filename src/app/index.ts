@@ -1,14 +1,22 @@
 //#region Logger
 console.log('Loading logger...');
-import { c, handleErr, log } from '@log';
+import { c, handleErr, log, wrapLog } from '@log';
 log('setup', 'Logger loaded!');
 //#endregion
 
-//#region Args
-import { handleArgs } from '@scripts/handleArgs.js';
-import { colors } from '@common/constants.js';
+//#region Process errors
+process.on('uncaughtException', err => {
+  handleErr(err);
 
-const argOptions = await handleArgs(process.argv);
+  process.exit(1);
+});
+//#endregion
+
+//#region Args
+import { colors } from '@common/constants.js';
+import { handleArgs } from '@scripts/handleArgs.js';
+
+const argOptions = handleArgs(process.argv);
 //#endregion
 
 //#region Environment variables
@@ -62,9 +70,21 @@ log('setup', 'Setting up Discord client');
 
 const client = new CustomClient({
   intents: [Intents.Guilds, Intents.GuildMessages, Intents.MessageContent, Intents.GuildMembers], // Not sure about this
-  commandErrorCooldown: 60,
-  logCommandUses: true
+  commandErrorCooldownSeconds: 60,
+  logCommandUses: true,
+
+  // These should be the same as the installation contexts in the developer dashboard.
+  allowGuildInstalledCommands: true,
+  allowUserInstalledCommands: true
 });
+
+// Empty deploy
+if (argOptions.emptyDeploy) {
+  log('client', 'Removing all deployed commands...', 1);
+  await deployCommands(client, dev, true);
+  log('process', `Running without any commands is pointless, exiting...`, 1);
+  process.exit(0);
+}
 
 // Commands
 log('client', `Setting up commands`, 1);
@@ -79,11 +99,13 @@ for (const commandFile of commandFiles) {
 }
 
 // Sending commands to discord
-if (!argOptions.skipDeploy) {
+if (argOptions.skipDeploy) {
+  log('client', `Skipped refreshing API commands, no command IDs will be gathered!`, 1);
+  wrapLog('warn', `If the previous run did not deploy any commands, you could be running without commands now. Unknown things might happen!`, 1);
+  wrapLog('warn', `If that's not the case, you can ignore this message.`, 1);
+} else {
   log('client', 'Refreshing API commands', 1);
   await deployCommands(client, dev);
-} else {
-  log('client', `Skipped refreshing API commands, no command IDs will be gathered!`, 1);
 }
 
 // Events

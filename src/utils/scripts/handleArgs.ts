@@ -1,6 +1,5 @@
 import { colors } from '@common/constants.js';
-import { c, handleErr, log } from '@log';
-import { resetCommands } from '@scripts/resetCommands.js';
+import { c, log } from '@log';
 
 export interface ProcessArg {
   readonly name: string;
@@ -17,16 +16,16 @@ export const argMap: Readonly<ProcessArg[]> = Object.freeze<ProcessArg[]>([
   {
     name: 'skip-deploy',
     alias: 's',
-    description: 'Skip refreshing commands with the Discord API.'
+    description: 'Skip deploying commands on the Discord API.'
   },
   {
-    name: 'reset-commands',
-    alias: 'r',
-    description: 'Resets global and dev guild commands.'
+    name: 'empty-deploy',
+    alias: 'e',
+    description: 'Deploy an emtpy set of commands, effectively removing all commands.'
   }
 ]);
 
-export async function handleArgs(processArgs: string[]): Promise<{ skipDeploy: boolean }> {
+export function handleArgs(processArgs: string[]): { skipDeploy: boolean; emptyDeploy: boolean } {
   const validArgs = argMap.flatMap(a => {
     const validArgNames = [`--${a.name}`];
 
@@ -62,27 +61,13 @@ export async function handleArgs(processArgs: string[]): Promise<{ skipDeploy: b
     process.exit(0);
   }
 
-  if (args.includes('help')) {
-    log('process', `Command line arguments help:`);
+  let skipDeploy: boolean = args.includes('skip-deploy');
 
-    for (const arg of argMap) {
-      log('process', '');
-      log('process', `${c(`--${arg.name}`, colors.string)}${arg.alias ? `, ${c(`-${arg.alias}`, colors.string)}` : ''}`);
-      log('process', arg.description ?? 'No argument description.');
-    }
+  if (args.includes('empty-deploy') && skipDeploy) {
+    log('process', `Ignoring --skip-deploy (-s) flag due to the presence of the --empty-deploy (-e) flag...`);
 
-    process.exit(0);
+    skipDeploy = false;
   }
 
-  if (args.includes('reset-commands')) {
-    log('process', 'Resetting global and dev guild commands...');
-
-    await resetCommands()
-      .then(() => log('process', 'Commands reset successfully.'))
-      .catch(handleErr);
-
-    process.exit(0);
-  }
-
-  return { skipDeploy: args.includes('skip-deploy') };
+  return { skipDeploy, emptyDeploy: args.includes('empty-deploy') };
 }

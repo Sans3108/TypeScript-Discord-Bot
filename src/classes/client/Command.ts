@@ -2,7 +2,22 @@ import { CustomClient } from '@classes/client/CustomClient.js';
 import { colors, developerIds, supportServer } from '@common/constants.js';
 import { c, handleErr, log } from '@log';
 import { emb, loggedCommand } from '@utils';
-import { ApplicationCommandType, AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandBuilder, MessageContextMenuCommandInteraction, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, TimestampStyles, UserContextMenuCommandInteraction, time } from 'discord.js';
+import {
+  ApplicationCommandType,
+  ApplicationIntegrationType,
+  AutocompleteInteraction,
+  ButtonInteraction,
+  ChatInputCommandInteraction,
+  ContextMenuCommandBuilder,
+  InteractionContextType,
+  MessageContextMenuCommandInteraction,
+  SlashCommandBuilder,
+  SlashCommandOptionsOnlyBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
+  TimestampStyles,
+  UserContextMenuCommandInteraction,
+  time
+} from 'discord.js';
 
 export enum CommandGroup {
   general
@@ -14,14 +29,18 @@ export enum CommandType {
   userContext
 }
 
+export type AllowedCommandSources = keyof typeof InteractionContextType;
+
 export interface CommandOptionsMetadata {
   name: string;
   description?: string;
   helpText?: string;
-  cooldown?: number;
+  cooldownSeconds?: number;
   group?: CommandGroup;
-  guildOnly?: boolean;
   developer?: boolean;
+  userInstalled: boolean;
+  guildInstalled: boolean;
+  contexts: true | NonEmptyArray<AllowedCommandSources>;
 }
 
 export enum CooldownType {
@@ -42,44 +61,89 @@ export enum CommandRunResult {
 }
 
 //#region Base Command
+export type SlashCommandBuilderTypes =
+  | SlashCommandBuilder
+  | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
+  | SlashCommandSubcommandsOnlyBuilder
+  | SlashCommandOptionsOnlyBuilder;
+
 export interface BaseCommandOptions {
   metadata: CommandOptionsMetadata;
 }
 
 export abstract class BaseCommand {
+  private _patched: boolean;
   public readonly name: string;
   public readonly description: string;
   public readonly helpText?: string;
   public readonly cooldown: number;
   public readonly group: CommandGroup;
-  public readonly guildOnly: boolean;
   public readonly developer: boolean;
+  public readonly userInstalled: boolean;
+  public readonly guildInstalled: boolean;
+  public readonly contexts: CommandOptionsMetadata['contexts'];
   public id: string;
 
   constructor(options: BaseCommandOptions) {
+    this._patched = false;
+
+    this.userInstalled = options.metadata.userInstalled;
+    this.guildInstalled = options.metadata.guildInstalled;
     this.name = options.metadata.name;
     this.description = options.metadata.description ?? 'No description.';
     this.helpText = options.metadata.helpText;
-    this.cooldown = options.metadata.cooldown ?? 3; // 3s default cooldown
+    this.cooldown = options.metadata.cooldownSeconds ?? 3; // 3s default cooldown
     this.group = options.metadata.group ?? CommandGroup.general;
-    this.guildOnly = options.metadata.guildOnly ?? true;
     this.developer = options.metadata.developer ?? false;
+    this.contexts = options.metadata.contexts;
 
     this.id = '0';
   }
 
-  protected async handleCooldown<T extends ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction | ButtonInteraction>(interaction: T, execute: (interaction: T, client: CustomClient) => Promise<boolean>): Promise<CommandRunResult> {
+  protected patch(self: ChatInputCommand | UserContextCommand | MessageContextCommand): this {
+    if (this._patched) return this;
+
+    if (!self.userInstalled && !self.guildInstalled) {
+      throw new Error(`${loggedCommand(self)} must be available in at least one installation context.`);
+    }
+
+    const integrationTypes: ApplicationIntegrationType[] = [];
+
+    if (this.userInstalled) integrationTypes.push(ApplicationIntegrationType.UserInstall);
+    if (this.guildInstalled) integrationTypes.push(ApplicationIntegrationType.GuildInstall);
+
+    self.builder.setIntegrationTypes(integrationTypes);
+
+    if (this.contexts === true) {
+      self.builder.setContexts(InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel);
+    } else {
+      const contexts: InteractionContextType[] = this.contexts.map(c => InteractionContextType[c]);
+      self.builder.setContexts(contexts);
+    }
+
+    this._patched = true;
+    return this;
+  }
+
+  public get patched(): boolean {
+    return this._patched;
+  }
+
+  protected async handleCooldown<T extends ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction | ButtonInteraction>(
+    interaction: T,
+    execute: (interaction: T, client: CustomClient) => Promise<boolean>
+  ): Promise<CommandRunResult> {
     const client = interaction.client as CustomClient;
 
     const cooldownMap = client.commandCooldownMaps.get(this.name);
 
-    if (!cooldownMap) throw new Error(`Could not find cooldown map for ${this.name}`);
+    if (!cooldownMap) throw new Error(`Could not find cooldown map for ${c(this.name, colors.command.name)}.`);
 
     const now = Date.now();
 
     if (cooldownMap.has(interaction.user.id)) {
       const cooldown = cooldownMap.get(interaction.user.id)!;
-      const expireTimestamp = cooldown.timestamp + (cooldown.type === CooldownType.normal ? this.cooldown : client.options.commandErrorCooldown) * 1000;
+      const expireTimestamp = cooldown.timestamp + (cooldown.type === CooldownType.normal ? this.cooldown : client.options.commandErrorCooldownSeconds) * 1000;
 
       if (now < expireTimestamp) {
         const timeLeft = time(new Date(expireTimestamp), TimestampStyles.RelativeTime);
@@ -98,11 +162,14 @@ export abstract class BaseCommand {
 
     let commandResultCooldownType: CooldownType = CooldownType.errored;
 
+    let errored = false;
+
     try {
       const output = await execute(interaction, client);
 
       commandResultCooldownType = output ? CooldownType.normal : CooldownType.skipped;
     } catch (_err: unknown) {
+      errored = true;
       const err = _err as Error;
 
       handleErr(err);
@@ -112,16 +179,14 @@ export abstract class BaseCommand {
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply(reply).catch(handleErr);
       } else await interaction.reply(reply).catch(handleErr);
-
-      return CommandRunResult.errored;
     } finally {
       // dont apply cooldown to dev commands or commands that returned `false`
       if (commandResultCooldownType !== CooldownType.skipped && !this.developer) {
-        cooldownMap.set(interaction.user.id, { timestamp: Date.now(), type: CooldownType.normal });
-        setTimeout(() => cooldownMap.delete(interaction.user.id), (commandResultCooldownType === CooldownType.normal ? this.cooldown : client.options.commandErrorCooldown) * 1000);
+        cooldownMap.set(interaction.user.id, { timestamp: Date.now(), type: errored ? CooldownType.errored : CooldownType.normal });
+        setTimeout(() => cooldownMap.delete(interaction.user.id), (errored ? client.options.commandErrorCooldownSeconds : this.cooldown) * 1000);
       }
 
-      return CommandRunResult.normal;
+      return errored ? CommandRunResult.errored : CommandRunResult.normal;
     }
   }
 
@@ -132,8 +197,6 @@ export abstract class BaseCommand {
 //#endregion
 
 //#region ChatInput Command
-export type SlashCommandBuilderTypes = SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'> | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder;
-
 export interface ChatInputCommandOptions extends BaseCommandOptions {
   builder: SlashCommandBuilderTypes;
   execute: (interaction: ChatInputCommandInteraction, client: CustomClient) => Promise<boolean>;
@@ -155,16 +218,20 @@ export class ChatInputCommand extends BaseCommand {
 
     this.builder.setName(this.name);
     this.builder.setDescription(this.description);
-    this.builder.setDMPermission(!this.guildOnly);
 
     if (options.handleAutocomplete) {
       this.handleAutocomplete = options.handleAutocomplete;
     }
+
+    this.patch(this);
   }
 
   public async run(interaction: ChatInputCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} but is not a developer.`);
+      log(
+        'commands',
+        `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} but is not a developer.`
+      );
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
@@ -208,13 +275,19 @@ export class MessageContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
-    this.builder.setDMPermission(!this.guildOnly);
+
+    //@ts-expect-error
     this.builder.setType(ApplicationCommandType.Message);
+
+    this.patch(this);
   }
 
   public async run(interaction: MessageContextMenuCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} but is not a developer.`);
+      log(
+        'commands',
+        `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} but is not a developer.`
+      );
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
@@ -258,13 +331,19 @@ export class UserContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
-    this.builder.setDMPermission(!this.guildOnly);
+    //@ts-expect-error
     this.builder.setType(ApplicationCommandType.User);
+    // this.builder.setType(ApplicationCommandType.PrimaryEntryPoint);
+
+    this.patch(this);
   }
 
   public async run(interaction: UserContextMenuCommandInteraction): Promise<void> {
     if (this.developer && !developerIds.includes(interaction.user.id)) {
-      log('commands', `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} ${c(this.name, colors.command.name)} but is not a developer.`);
+      log(
+        'commands',
+        `${c(interaction.user.username, colors.user.name)} (${c(interaction.user.id, colors.user.id)}) tried to use developer command ${loggedCommand(this)} ${c(this.name, colors.command.name)} but is not a developer.`
+      );
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],

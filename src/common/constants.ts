@@ -2,7 +2,6 @@ export const tagStartEdge = '❮' as const;
 export const tagEndEdge = '❯' as const;
 export const spacerChar = '───' as const;
 export const developerIds = ['366536353418182657'];
-export const botInvite = 'https://google.com';
 export const supportServer = 'https://google.com';
 
 /**
@@ -39,10 +38,13 @@ export const colors = {
       client: '#9738f5',
       events: '#384ef5',
       commands: '#fc039d',
-      process: '#fcc203'
+      process: '#fcc203',
+      warn: '#fb6508'
     },
-    div: '#4a4a4a'
+    div: '#4a4a4a',
+    time: '#881798'
   },
   number: '#3ff2b6',
-  string: '#cefc03'
+  string: '#cefc03',
+  null: '#4a9cd6'
 } as const;

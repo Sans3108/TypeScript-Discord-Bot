@@ -15,13 +15,23 @@ const logger = new Logger({
       start: tagStartEdge,
       end: tagEndEdge
     }
+  },
+  time: {
+    enabled: false
   }
 });
 
 export const log = logger.print.bind(logger);
+export const wrapLog = logger.wrapPrint.bind(logger);
 
 export const c = Logger.c;
 
 export function handleErr(err: Error) {
-  log('error', `${err.name}: ${err.message}${err.stack ? `\n\n${err.stack}` : ''}`);
+  log('error', `${err.name}: ${err.message.split('\n')[0]}`);
+  if (err.stack) {
+    log('error', 'Stack trace:');
+    console.log();
+    console.log(err.stack);
+    console.log();
+  }
 }
