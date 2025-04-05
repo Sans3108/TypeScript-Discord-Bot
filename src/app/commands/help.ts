@@ -1,7 +1,7 @@
 import { Command, CommandGroup } from '@classes/client/Command.js';
 import { colors, supportServer } from '@common/constants.js';
 import { capitalize, formatTime } from '@utils';
-import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, OAuth2Scopes, SlashCommandBuilder } from 'discord.js';
+import { APIEmbedField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 
 export default new Command.ChatInput({
   builder: new SlashCommandBuilder().addStringOption(option => {
@@ -35,7 +35,7 @@ export default new Command.ChatInput({
           .setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() })
           .setTimestamp();
 
-        await interaction.reply({ embeds: [unknownCommand], ephemeral: true });
+        await interaction.reply({ embeds: [unknownCommand], flags: [MessageFlags.Ephemeral] });
 
         return false;
       }
@@ -57,7 +57,7 @@ export default new Command.ChatInput({
         .setThumbnail(client.user.displayAvatarURL())
         .setFooter({ text: client.user.displayName, iconURL: client.user.displayAvatarURL() })
         .setTimestamp();
-      await interaction.reply({ embeds: [commandHelp], ephemeral: true });
+      await interaction.reply({ embeds: [commandHelp], flags: [MessageFlags.Ephemeral] });
       return true;
     }
 
@@ -93,7 +93,7 @@ export default new Command.ChatInput({
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(supportServerLinkButton, botInviteLinkButton);
 
-    await interaction.reply({ embeds: [commandsEmbed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [commandsEmbed], components: [row], flags: [MessageFlags.Ephemeral] });
 
     return true;
   },

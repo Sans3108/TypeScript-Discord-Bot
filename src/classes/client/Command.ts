@@ -11,6 +11,7 @@ import {
   ContextMenuCommandBuilder,
   InteractionContextType,
   MessageContextMenuCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
@@ -153,7 +154,7 @@ export abstract class BaseCommand {
 
         await interaction.reply({
           embeds: [emb('error', message)],
-          ephemeral: true
+          flags: [MessageFlags.Ephemeral]
         });
 
         return CommandRunResult.onCooldown;
@@ -174,7 +175,7 @@ export abstract class BaseCommand {
 
       handleErr(err);
 
-      const reply = { content: 'There was an error while executing this command!', ephemeral: true };
+      const reply = { content: 'There was an error while executing this command!' };
 
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply(reply).catch(handleErr);
@@ -235,7 +236,7 @@ export class ChatInputCommand extends BaseCommand {
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
       return;
     }
@@ -289,7 +290,7 @@ export class MessageContextCommand extends BaseCommand {
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
       return;
     }
@@ -343,7 +344,7 @@ export class UserContextCommand extends BaseCommand {
 
       await interaction.reply({
         embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
-        ephemeral: true
+        flags: [MessageFlags.Ephemeral]
       });
       return;
     }
