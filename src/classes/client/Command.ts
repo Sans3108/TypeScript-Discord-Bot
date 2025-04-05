@@ -275,8 +275,6 @@ export class MessageContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
-
-    //@ts-expect-error
     this.builder.setType(ApplicationCommandType.Message);
 
     this.patch(this);
@@ -331,9 +329,7 @@ export class UserContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
-    //@ts-expect-error
     this.builder.setType(ApplicationCommandType.User);
-    // this.builder.setType(ApplicationCommandType.PrimaryEntryPoint);
 
     this.patch(this);
   }

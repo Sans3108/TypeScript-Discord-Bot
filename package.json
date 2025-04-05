@@ -7,8 +7,8 @@
     "node": ">=16.11.0"
   },
   "scripts": {
-    "build": "tsc && babel dist --out-dir dist",
-    "dev": "pnpm cleanup && pnpm build && node --enable-source-maps .",
+    "build": "rimraf dist && tsc && babel dist --out-dir dist",
+    "dev": "rimraf dist && tsc && babel dist --out-dir dist && node --enable-source-maps .",
     "start": "node --enable-source-maps .",
     "cleanup": "rimraf dist",
     "prettier": "prettier . --write"
