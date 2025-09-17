@@ -21,7 +21,7 @@ export const argMap: Readonly<ProcessArg[]> = Object.freeze<ProcessArg[]>([
   {
     name: 'empty-deploy',
     alias: 'e',
-    description: 'Deploy an emtpy set of commands, effectively removing all commands.'
+    description: 'Deploy an empty set of commands, effectively removing all commands.'
   }
 ]);
 
