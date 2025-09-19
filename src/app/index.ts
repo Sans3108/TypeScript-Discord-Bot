@@ -4,19 +4,24 @@ import { c, handleErr, log, wrapLog } from '@log';
 log('setup', 'Logger loaded!');
 //#endregion
 
-//#region Process errors
-process.on('uncaughtException', err => {
-  handleErr(err);
-
-  process.exit(1);
-});
-//#endregion
-
 //#region Args
 import { colors } from '@common/constants.js';
 import { handleArgs } from '@scripts/handleArgs.js';
 
 const argOptions = handleArgs(process.argv);
+//#endregion
+
+//#region Process errors
+if (!argOptions.dryRun) {
+  const shutdown = (err: any) => {
+    handleErr(err);
+
+    process.exit(1);
+  };
+
+  process.on('uncaughtException', shutdown);
+  process.on('unhandledRejection', shutdown);
+}
 //#endregion
 
 //#region Environment variables
@@ -48,25 +53,32 @@ const dev = DEV_MODE === 'true';
 log('setup', `Developer mode is ${c(dev ? 'ON' : 'OFF', colors.developerMode[dev ? 'on' : 'off'])}`);
 //#endregion
 
-//#region Imports
-log('setup', 'Importing files and modules');
+//#region i18n
+log('setup', 'Setting up i18n...');
 
-import { ClientEvents, GatewayIntentBits as Intents } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import t from '@i18n';
+
+log('debug', t.ro.test());
+
+import { locales } from '../locales/i18n-util.js';
+
+log('setup', `i18n loaded ${c(locales.length.toString(), colors.number)} locales: ` + locales.map(lang => c(lang, colors.string)).join(', '));
+//#endregion
+
+//#region Discord client setup
+log('setup', 'Setting up Discord client');
 
 import { ChatInputCommand, MessageContextCommand, UserContextCommand } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
 import { deployCommands } from '@scripts/deployCommands.js';
-//#endregion
+import { ClientEvents, GatewayIntentBits as Intents } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-//#region Discord client setup
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-log('setup', 'Setting up Discord client');
 
 const client = new CustomClient({
   intents: [Intents.Guilds, Intents.GuildMessages, Intents.MessageContent, Intents.GuildMembers], // Not sure about this
@@ -122,6 +134,9 @@ for (const eventFile of discordEventFiles) {
 //#endregion
 
 //#region Discord Login
-log('client', 'Logging in...');
-client.login(DISCORD_CLIENT_TOKEN);
+log('client', argOptions.dryRun ? 'Logging in... (DRY RUN)' : 'Logging in...');
+
+if (!argOptions.dryRun) {
+  client.login(DISCORD_CLIENT_TOKEN);
+}
 //#endregion

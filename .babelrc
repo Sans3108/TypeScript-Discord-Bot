@@ -27,6 +27,10 @@
           {
             "rootPathSuffix": "./dist/utils/scripts",
             "rootPathPrefix": "@scripts"
+          },
+          {
+            "rootPathSuffix": "./dist/locales/i18n-node.js",
+            "rootPathPrefix": "@i18n"
           }
         ]
       }

@@ -25,7 +25,8 @@
       "@utils": ["utils/functions/index"],
       "@common/*": ["common/*"],
       "@classes/*": ["classes/*"],
-      "@scripts/*": ["utils/scripts/*"]
+      "@scripts/*": ["utils/scripts/*"],
+      "@i18n": ["locales/i18n-node"]
     }
   },
   "include": ["./src/**/*"],

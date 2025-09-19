@@ -2,7 +2,7 @@ export const tagStartEdge = '❮' as const;
 export const tagEndEdge = '❯' as const;
 export const spacerChar = '───' as const;
 export const developerIds = ['366536353418182657'];
-export const supportServer = 'https://google.com';
+export const supportServer = 'https://github.com/Sans3108/TypeScript-Discord-Bot';
 
 /**
  * This object holds any and all hex colors used in this project.
@@ -39,7 +39,8 @@ export const colors = {
       events: '#384ef5',
       commands: '#fc039d',
       process: '#fcc203',
-      warn: '#fb6508'
+      warn: '#fb6508',
+      debug: '#f24545'
     },
     div: '#4a4a4a',
     time: '#881798'

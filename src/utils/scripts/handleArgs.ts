@@ -22,10 +22,15 @@ export const argMap: Readonly<ProcessArg[]> = Object.freeze<ProcessArg[]>([
     name: 'empty-deploy',
     alias: 'e',
     description: 'Deploy an empty set of commands, effectively removing all commands.'
+  },
+  {
+    name: 'dry-run',
+    alias: 'd',
+    description: 'Run the bot without connecting to Discord. Useful for testing things like command deployment.'
   }
 ]);
 
-export function handleArgs(processArgs: string[]): { skipDeploy: boolean; emptyDeploy: boolean } {
+export function handleArgs(processArgs: string[]): { skipDeploy: boolean; emptyDeploy: boolean; dryRun: boolean } {
   const validArgs = argMap.flatMap(a => {
     const validArgNames = [`--${a.name}`];
 
@@ -69,5 +74,9 @@ export function handleArgs(processArgs: string[]): { skipDeploy: boolean; emptyD
     skipDeploy = false;
   }
 
-  return { skipDeploy, emptyDeploy: args.includes('empty-deploy') };
+  const dryRun: boolean = args.includes('dry-run');
+
+  if (dryRun) log('process', `Dry-running! Not connecting to Discord...`);
+
+  return { skipDeploy, emptyDeploy: args.includes('empty-deploy'), dryRun };
 }
