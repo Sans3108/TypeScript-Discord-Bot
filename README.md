@@ -7,10 +7,17 @@ My go-to template for building Discord bots with TypeScript & discord.js
 ## Requirements
 
 - [NodeJS](https://nodejs.org)
-  <br> This project was tested with version [20.10.0](https://nodejs.org/dist/v20.10.0/) however any recent LTS version should work.
+  <br> Latest LTS version is recommended.
 - [pnpm](https://pnpm.io/)
   <br> Or otherwise your favorite package manager.
 - Some knowledge of how to run a Discord bot.
+
+## Features
+
+- Organized directories for commands, events, scripts etc.
+- Easy to navigate/understand code base.
+- Minimal setup required to get online.
+- Localization support already built-in usin [i18next](https://www.npmjs.com/package/i18next).
 
 ## How to use
 

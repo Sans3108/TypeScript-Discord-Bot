@@ -4,7 +4,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "outDir": "dist",
-    "removeComments": true,
+    "removeComments": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -25,7 +25,8 @@
       "@utils": ["utils/functions/index"],
       "@common/*": ["common/*"],
       "@classes/*": ["classes/*"],
-      "@scripts/*": ["utils/scripts/*"]
+      "@scripts/*": ["utils/scripts/*"],
+      "@i18n": ["common/i18n"]
     }
   },
   "include": ["./src/**/*"],

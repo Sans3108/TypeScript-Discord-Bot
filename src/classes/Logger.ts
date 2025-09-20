@@ -22,7 +22,8 @@ const tags = [
   { name: 'error', color: colors.logger.tags.error },
   { name: 'commands', color: colors.logger.tags.commands },
   { name: 'process', color: colors.logger.tags.process },
-  { name: 'warn', color: colors.logger.tags.warn }
+  { name: 'warn', color: colors.logger.tags.warn },
+  { name: 'debug', color: colors.logger.tags.debug }
 ] as const;
 
 export type TagName = (typeof tags)[number]['name'];

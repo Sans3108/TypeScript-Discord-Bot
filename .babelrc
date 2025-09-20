@@ -27,8 +27,24 @@
           {
             "rootPathSuffix": "./dist/utils/scripts",
             "rootPathPrefix": "@scripts"
+          },
+          {
+            "rootPathSuffix": "./dist/common/i18n.js",
+            "rootPathPrefix": "@i18n"
           }
         ]
+      }
+    ],
+    [
+      "i18next-extract",
+      {
+        "locales": ["en-US", "ro"], // add any new locales here, use discord's locale codes
+        "keyAsDefaultValue": true,
+        "tFunctionNames": ["t", "getLocalizationMap"],
+        "outputPath": "locales/{{locale}}/{{ns}}.json",
+        "nsSeparator": false,
+        "keySeparator": ".",
+        "discardOldKeys": true
       }
     ]
   ]

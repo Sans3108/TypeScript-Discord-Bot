@@ -1,6 +1,7 @@
 import { ChatInputCommand } from '@classes/client/Command.js';
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { DiscordEvent } from '@classes/events/DiscordEvent.js';
+import { t } from '@i18n';
 import { handleErr } from '@log';
 import { MessageFlags } from 'discord.js';
 
@@ -30,7 +31,7 @@ export default new DiscordEvent('interactionCreate', async interaction => {
 
     handleErr(err);
 
-    const reply = { content: 'There was an error while running this command!' };
+    const reply = { content: t('command.error', { lng: interaction.locale }) };
 
     if (interaction.replied || interaction.deferred) {
       await interaction.editReply(reply).catch(handleErr);
