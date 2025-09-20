@@ -1,0 +1,34 @@
+{
+  "command": {
+    "cooldown": {
+      "error": "Ne pare rău, comanda {{commandName}} a generat anterior o eroare. Vă rugăm să încercați din nou {{discordRelativeStamp}}.\nDacă acest lucru continuă să se întâmple, vă rugăm să contactați suportul [aici]({{supportServer}}).",
+      "normal": "Veți putea folosi comanda {{commandName}} {{discordRelativeStamp}}."
+    },
+    "devOnlyWarning": "Nu aveți permisiunea de a folosi comanda {{commandName}}. Acest incident a fost înregistrat.",
+    "error": "A apărut o eroare la rularea acestei comenzi!",
+    "groups": {
+      "general": "general"
+    }
+  },
+  "commands": {
+    "help": {
+      "description": "Obțineți o listă de comenzi sau ajutor pentru o comandă specifică.",
+      "name": "ajutor",
+      "option1": {
+        "description": "Comanda pentru care aveți nevoie de ajutor.",
+        "name": "comandă"
+      },
+      "strings": {
+        "addBot": "Adaugă {{botName}}",
+        "botDescription": "Template-ul meu uimitor de bot pentru Discord.\n\nCreat de {{author}}",
+        "cooldown": "Pauză",
+        "group": "Grup",
+        "groupCommands": "Comenzi {{groupName}}",
+        "supportServer": "Server de suport",
+        "tip": "Sfat: Comenzile marcate cu `*` sunt comenzi contextuale.",
+        "unknownCommandDescription": "Comanda `{{commandName}}` nu există!",
+        "unknownCommandTitle": "Comandă necunoscută"
+      }
+    }
+  }
+}

@@ -56,13 +56,11 @@ log('setup', `Developer mode is ${c(dev ? 'ON' : 'OFF', colors.developerMode[dev
 //#region i18n
 log('setup', 'Setting up i18n...');
 
-import t from '@i18n';
+import i18n from '@i18n';
 
-log('debug', t.ro.test());
+const langs = Object.keys(i18n.store.data);
 
-import { locales } from '../locales/i18n-util.js';
-
-log('setup', `i18n loaded ${c(locales.length.toString(), colors.number)} locales: ` + locales.map(lang => c(lang, colors.string)).join(', '));
+log('setup', `i18n loaded ${c(langs.length.toString(), colors.number)} locales: ` + langs.map(lang => c(lang, colors.string)).join(', '));
 //#endregion
 
 //#region Discord client setup

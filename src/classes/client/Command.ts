@@ -1,5 +1,6 @@
 import { CustomClient } from '@classes/client/CustomClient.js';
 import { colors, developerIds, supportServer } from '@common/constants.js';
+import { t } from '@i18n';
 import { c, handleErr, log } from '@log';
 import { emb, loggedCommand } from '@utils';
 import {
@@ -10,6 +11,8 @@ import {
   ChatInputCommandInteraction,
   ContextMenuCommandBuilder,
   InteractionContextType,
+  Locale,
+  LocalizationMap,
   MessageContextMenuCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
@@ -24,6 +27,12 @@ export enum CommandGroup {
   general
 }
 
+export function getCommandGroupName(group: CommandGroup, lng: Locale): string {
+  if (group === CommandGroup.general) return t('command.groups.general', { lng });
+
+  throw new Error(`Unknown command group: ${group}`);
+}
+
 export enum CommandType {
   chatInput,
   messageContext,
@@ -34,8 +43,11 @@ export type AllowedCommandSources = keyof typeof InteractionContextType;
 
 export interface CommandOptionsMetadata {
   name: string;
-  description?: string;
+  nameLocalizations?: LocalizationMap;
+  description: string;
+  descriptionLocalizations?: LocalizationMap;
   helpText?: string;
+  helpTextLocalizations?: LocalizationMap;
   cooldownSeconds?: number;
   group?: CommandGroup;
   developer?: boolean;
@@ -75,8 +87,11 @@ export interface BaseCommandOptions {
 export abstract class BaseCommand {
   private _patched: boolean;
   public readonly name: string;
+  public readonly nameLocalizations?: LocalizationMap;
   public readonly description: string;
+  public readonly descriptionLocalizations?: LocalizationMap;
   public readonly helpText?: string;
+  public readonly helpTextLocalizations?: LocalizationMap;
   public readonly cooldown: number;
   public readonly group: CommandGroup;
   public readonly developer: boolean;
@@ -91,8 +106,11 @@ export abstract class BaseCommand {
     this.userInstalled = options.metadata.userInstalled;
     this.guildInstalled = options.metadata.guildInstalled;
     this.name = options.metadata.name;
-    this.description = options.metadata.description ?? 'No description.';
+    this.nameLocalizations = options.metadata.nameLocalizations;
+    this.description = options.metadata.description;
+    this.descriptionLocalizations = options.metadata.descriptionLocalizations;
     this.helpText = options.metadata.helpText;
+    this.helpTextLocalizations = options.metadata.helpTextLocalizations;
     this.cooldown = options.metadata.cooldownSeconds ?? 3; // 3s default cooldown
     this.group = options.metadata.group ?? CommandGroup.general;
     this.developer = options.metadata.developer ?? false;
@@ -134,6 +152,7 @@ export abstract class BaseCommand {
     interaction: T,
     execute: (interaction: T, client: CustomClient) => Promise<boolean>
   ): Promise<CommandRunResult> {
+    const lng = interaction.locale;
     const client = interaction.client as CustomClient;
 
     const cooldownMap = client.commandCooldownMaps.get(this.name);
@@ -148,8 +167,11 @@ export abstract class BaseCommand {
 
       if (now < expireTimestamp) {
         const timeLeft = time(new Date(expireTimestamp), TimestampStyles.RelativeTime);
-        const cooldownNormalMessage = `You will be able to use the ${this} command ${timeLeft}.`;
-        const cooldownErrorMessage = `Sorry, the ${this} command previously errored out. Please try again ${timeLeft}.\nIf this keeps happening, please contact support [here](${supportServer}).`;
+
+        const commandName = this.toString();
+
+        const cooldownNormalMessage = t('command.cooldown.normal', { lng, commandName, discordRelativeStamp: timeLeft });
+        const cooldownErrorMessage = t('command.cooldown.error', { lng, commandName, discordRelativeStamp: timeLeft, supportServer });
         const message = cooldown.type === CooldownType.errored ? cooldownErrorMessage : cooldownNormalMessage;
 
         await interaction.reply({
@@ -175,7 +197,7 @@ export abstract class BaseCommand {
 
       handleErr(err);
 
-      const reply = { content: 'There was an error while executing this command!' };
+      const reply = { content: t('command.error', { lng }) };
 
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply(reply).catch(handleErr);
@@ -189,6 +211,16 @@ export abstract class BaseCommand {
 
       return errored ? CommandRunResult.errored : CommandRunResult.normal;
     }
+  }
+
+  public getLocalized(prop: 'name' | 'description', lng: Locale): string;
+  public getLocalized(prop: 'helpText', lng: Locale): string | undefined;
+  public getLocalized(prop: 'name' | 'description' | 'helpText', lng: Locale): string | undefined {
+    if (prop === 'name') return this.nameLocalizations?.[lng] ?? this.name;
+    if (prop === 'description') return this.descriptionLocalizations?.[lng] ?? this.description;
+    if (prop === 'helpText') return this.helpTextLocalizations?.[lng] ?? this.helpText;
+
+    throw new Error(`Unknown property: ${prop}`);
   }
 
   toString() {
@@ -218,7 +250,9 @@ export class ChatInputCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
+    this.builder.setNameLocalizations(this.nameLocalizations ?? {});
     this.builder.setDescription(this.description);
+    this.builder.setDescriptionLocalizations(this.descriptionLocalizations ?? {});
 
     if (options.handleAutocomplete) {
       this.handleAutocomplete = options.handleAutocomplete;
@@ -235,7 +269,7 @@ export class ChatInputCommand extends BaseCommand {
       );
 
       await interaction.reply({
-        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        embeds: [emb('error', t('command.devOnlyWarning', { lng: interaction.locale, commandName: this.toString() }))],
         flags: [MessageFlags.Ephemeral]
       });
       return;
@@ -276,6 +310,7 @@ export class MessageContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
+    this.builder.setNameLocalizations(this.nameLocalizations ?? {});
     this.builder.setType(ApplicationCommandType.Message);
 
     this.patch(this);
@@ -289,7 +324,7 @@ export class MessageContextCommand extends BaseCommand {
       );
 
       await interaction.reply({
-        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        embeds: [emb('error', t('command.devOnlyWarning', { lng: interaction.locale, commandName: this.toString() }))],
         flags: [MessageFlags.Ephemeral]
       });
       return;
@@ -330,6 +365,7 @@ export class UserContextCommand extends BaseCommand {
     this.execute = options.execute;
 
     this.builder.setName(this.name);
+    this.builder.setNameLocalizations(this.nameLocalizations ?? {});
     this.builder.setType(ApplicationCommandType.User);
 
     this.patch(this);
@@ -343,7 +379,7 @@ export class UserContextCommand extends BaseCommand {
       );
 
       await interaction.reply({
-        embeds: [emb('error', `You are not allowed to use the ${this} command. This incident was logged.`)],
+        embeds: [emb('error', t('command.devOnlyWarning', { lng: interaction.locale, commandName: this.toString() }))],
         flags: [MessageFlags.Ephemeral]
       });
       return;

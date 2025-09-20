@@ -4,15 +4,14 @@
   "description": "Typescript Discord Bot template using discord.js v14",
   "main": "dist/app/index.js",
   "engines": {
-    "node": ">=16.11.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
-    "build": "pnpm i18n && rimraf dist && tsc && babel dist --out-dir dist",
-    "dev": "pnpm i18n && rimraf dist && tsc && babel dist --out-dir dist && node --enable-source-maps .",
+    "build": "rimraf dist && tsc && babel dist --out-dir dist",
+    "dev": "rimraf dist && tsc && babel dist --out-dir dist && node --enable-source-maps .",
     "start": "node --enable-source-maps .",
     "cleanup": "rimraf dist",
-    "prettier": "prettier . --write",
-    "i18n": "typesafe-i18n --no-watch"
+    "prettier": "prettier . --write"
   },
   "keywords": [],
   "author": "Sans3108",
@@ -22,12 +21,14 @@
     "chalk": "^5.6.2",
     "discord.js": "^14.22.1",
     "dotenv": "^17.2.2",
-    "typesafe-i18n": "^5.26.2",
+    "i18next": "^25.5.2",
+    "i18next-fs-backend": "^2.6.0",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",
     "@types/node": "24.5.1",
+    "babel-plugin-i18next-extract": "^1.1.0",
     "babel-plugin-root-import": "^6.6.0",
     "prettier": "3.6.2",
     "rimraf": "^6.0.1"

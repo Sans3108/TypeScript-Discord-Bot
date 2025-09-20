@@ -1,0 +1,34 @@
+{
+  "command": {
+    "cooldown": {
+      "error": "Sorry, the {{commandName}} command previously errored out. Please try again {{discordRelativeStamp}}.\nIf this keeps happening, please contact support [here]({{supportServer}}).",
+      "normal": "You will be able to use the {{commandName}} command {{discordRelativeStamp}}."
+    },
+    "devOnlyWarning": "You are not allowed to use the {{commandName}} command. This incident was logged.",
+    "error": "There was an error while running this command!",
+    "groups": {
+      "general": "general"
+    }
+  },
+  "commands": {
+    "help": {
+      "description": "Get a list of commands or help with a specific command.",
+      "name": "help",
+      "option1": {
+        "description": "The command you need help with.",
+        "name": "command"
+      },
+      "strings": {
+        "addBot": "Add {{botName}}",
+        "botDescription": "My awesome discord bot template.\n\nMade by {{author}}",
+        "cooldown": "Cooldown",
+        "group": "Group",
+        "groupCommands": "{{groupName}} commands",
+        "supportServer": "Support Server",
+        "tip": "Tip: Commands marked with `*` are context commands.",
+        "unknownCommandDescription": "Command `{{commandName}}` doesn't exist!",
+        "unknownCommandTitle": "Unknown command"
+      }
+    }
+  }
+}
